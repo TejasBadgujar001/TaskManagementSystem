@@ -32,4 +32,10 @@ public class UserEntity {
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @OneToMany(mappedBy = "Postuser", cascade = CascadeType.ALL)
+    private TaskEntity  task;
+
+    @OneToMany(mappedBy = "assignedUser", cascade = CascadeType.ALL)
+    private TaskEntity userTask;
 }
