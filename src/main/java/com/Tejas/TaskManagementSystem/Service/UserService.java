@@ -63,9 +63,14 @@ public class UserService {
         return toResponse(entity);
     }
 
-    public void deleteUser(String email){
-        UserEntity entity = userRepository.findByEmail(email).orElseThrow(()->new RuntimeException("User Not Found"));
-        userRepository.deleteById(entity.getId());
+    public String deleteUser(String email){
+        try {
+            UserEntity entity = userRepository.findByEmail(email).orElseThrow(()->new RuntimeException("User Not Found"));
+            userRepository.deleteById(entity.getId());
+        }catch (Exception e){
+
+        }
+
     }
 
     //Helper methods
