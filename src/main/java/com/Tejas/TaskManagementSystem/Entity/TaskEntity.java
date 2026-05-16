@@ -33,7 +33,7 @@ public class TaskEntity {
 
     @ManyToOne
     @JoinColumn(name = "postBy")
-    private UserEntity Postuser;
+    private UserEntity createdBy;
 
     @ManyToOne
     @JoinColumn(name = "assginedTo")
