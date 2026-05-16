@@ -54,18 +54,18 @@ public class UserService {
     }
 
     //Update User Profile
-    public UserResponse updateUser(UserRequest request){
+    public UserResponse updateUser(Long id,UserRequest request){
         UserEntity entity = toEntity(request);
-        entity = userRepository.findByEmail(entity.getEmail()).orElseThrow(()->new RuntimeException("User Not Found"));
+        entity = userRepository.findById(entity.getId()).orElseThrow(()->new RuntimeException("User Not Found"));
         entity.setName(request.getName());
         entity.setRole(request.getRole());
         entity.setPassword(passwordEncoder.encode(request.getPassword()));
         return toResponse(entity);
     }
 
-    public String deleteUser(String email){
+    public String deleteUser(Long id){
         try {
-            UserEntity entity = userRepository.findByEmail(email).orElseThrow(()->new RuntimeException("User Not Found"));
+            UserEntity entity = userRepository.findById(id).orElseThrow(()->new RuntimeException("User Not Found"));
             userRepository.deleteById(entity.getId());
             return "User Deleted";
         }catch (Exception e){
@@ -85,6 +85,7 @@ public class UserService {
 
     private UserResponse toResponse(UserEntity entity){
         return UserResponse.builder()
+                .id(entity.getId())
                 .name(entity.getName())
                 .email(entity.getEmail())
                 .role(entity.getRole())
