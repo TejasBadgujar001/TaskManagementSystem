@@ -10,7 +10,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController(value = "/user")
+@RestController()
+@RequestMapping(name = "/user")
 @RequiredArgsConstructor
 public class UserController {
     private final UserService service;
@@ -54,6 +55,7 @@ public class UserController {
         return new  ResponseEntity<>(response,HttpStatus.OK);
     }
 
+    //API for delete user
     @DeleteMapping("/delete/{email}")
     public ResponseEntity<String> deleteUser(@PathVariable String email){
         String message = service.deleteUser(email);
