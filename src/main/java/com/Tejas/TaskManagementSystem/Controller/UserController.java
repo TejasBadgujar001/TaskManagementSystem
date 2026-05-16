@@ -49,16 +49,16 @@ public class UserController {
     }
 
     //API for update user profile
-    @PutMapping("/update")
-    public ResponseEntity<UserResponse> updateUser(@RequestBody UserRequest request){
-        UserResponse response = service.updateUser(request);
+    @PutMapping("/update/{id}")
+    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @RequestBody UserRequest request){
+        UserResponse response = service.updateUser(id,request);
         return new  ResponseEntity<>(response,HttpStatus.OK);
     }
 
     //API for delete user
-    @DeleteMapping("/delete/{email}")
-    public ResponseEntity<String> deleteUser(@PathVariable String email){
-        String message = service.deleteUser(email);
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<String> deleteUser(@PathVariable Long id){
+        String message = service.deleteUser(id);
         return new ResponseEntity<>(message,HttpStatus.OK);
     }
 
