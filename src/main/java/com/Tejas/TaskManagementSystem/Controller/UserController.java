@@ -1,5 +1,6 @@
 package com.Tejas.TaskManagementSystem.Controller;
 
+import com.Tejas.TaskManagementSystem.DTO.AuthDto;
 import com.Tejas.TaskManagementSystem.DTO.UserRequest;
 import com.Tejas.TaskManagementSystem.DTO.UserResponse;
 import com.Tejas.TaskManagementSystem.Service.UserService;
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController()
 @RequestMapping(name = "/user")
@@ -62,4 +64,10 @@ public class UserController {
         return new ResponseEntity<>(message,HttpStatus.OK);
     }
 
+    //API for Login
+    @PostMapping("/signin")
+    public ResponseEntity<Map<String,Object>> signIn(@RequestBody AuthDto dto){
+        Map<String,Object> res = service.authenticateAndGenerateToken(dto);
+        return new ResponseEntity<>(res,HttpStatus.OK);
+    }
 }
