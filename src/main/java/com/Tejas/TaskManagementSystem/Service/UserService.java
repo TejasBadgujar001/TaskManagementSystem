@@ -1,16 +1,21 @@
 package com.Tejas.TaskManagementSystem.Service;
 
+import com.Tejas.TaskManagementSystem.DTO.AuthDto;
 import com.Tejas.TaskManagementSystem.DTO.UserRequest;
 import com.Tejas.TaskManagementSystem.DTO.UserResponse;
 import com.Tejas.TaskManagementSystem.Entity.UserEntity;
 import com.Tejas.TaskManagementSystem.Repository.UserRepository;
+import com.Tejas.TaskManagementSystem.Util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -18,7 +23,8 @@ import java.util.stream.Collectors;
 public class UserService {
     private final UserRepository userRepository; // this will be injected by Spring Container
     private final PasswordEncoder passwordEncoder;// this will be injected from the securityConfig
-
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtil jwtUtil;
 
     //Method for Adding new user
     public UserResponse registerUser(UserRequest request){
@@ -52,6 +58,10 @@ public class UserService {
         UserEntity entity= userRepository.findByEmail(email).orElseThrow(()->new RuntimeException("User Not Logged In"));
         return toResponse(entity);
     }
+    public UserResponse getUserPublicProfile(String email){
+        UserEntity user = userRepository.findByEmail(email).orElseThrow(()->new RuntimeException("No user with email id :"+email));
+        return toResponse(user);
+    }
 
     //Update User Profile
     public UserResponse updateUser(Long id,UserRequest request){
@@ -61,6 +71,21 @@ public class UserService {
         entity.setRole(request.getRole());
         entity.setPassword(passwordEncoder.encode(request.getPassword()));
         return toResponse(entity);
+    }
+
+    public Map<String,Object> authenticateAndGenerateToken(AuthDto authDto){
+        try {
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authDto.getEmail(), authDto.getPassword()));
+            String token = jwtUtil.generateToken(authDto.getEmail());
+            return Map.of(
+                "User",getUserPublicProfile(authDto.getEmail()),
+                "Token",token
+            );
+        }catch (Exception e){
+            return Map.of(
+                    "Error",e.getMessage()
+            );
+        }
     }
 
     public String deleteUser(Long id){
