@@ -10,6 +10,6 @@ import java.util.Optional;
 @Repository
 public interface TaskRepository extends JpaRepository<TaskEntity,Long> {
 
-    Optional<List<TaskEntity>> findByCreatedBy(Long id);
-    Optional<List<TaskEntity>> findByAssignedUser(Long id);
+    Optional<List<TaskEntity>> findByCreatedById(Long id);
+    Optional<List<TaskEntity>> findByAssignedUserId(Long id);
 }
