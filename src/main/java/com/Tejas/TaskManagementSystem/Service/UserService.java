@@ -42,9 +42,9 @@ public class UserService {
         UserEntity entity = userRepository.findById(id).orElseThrow(()->new RuntimeException("User Not Found"));
         return toResponse(entity);
     }
-    public  UserResponse getUserByName(String name){
-        UserEntity entity = userRepository.findByName(name).orElseThrow(()->new RuntimeException("User Not Found"));
-        return toResponse(entity);
+    public  List<UserResponse> getUserByName(String name){
+        List<UserEntity> list = userRepository.findByName(name).orElseThrow(()->new RuntimeException("User Not Found"));
+        return list.stream().map(user->toResponse(user)).collect(Collectors.toList());
     }
     public  UserResponse getUserByEmail(String email){
         UserEntity entity = userRepository.findByEmail(email).orElseThrow(()->new RuntimeException("User Not Found"));
