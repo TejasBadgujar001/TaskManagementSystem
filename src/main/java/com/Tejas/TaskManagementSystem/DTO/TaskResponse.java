@@ -19,6 +19,6 @@ public class TaskResponse {
     private Priority priority;
     private Status status;
     private LocalDate dueDate;
-    private UserEntity createdBy;
-    private UserEntity assignedUser;
+    private UserResponse createdBy;
+    private UserResponse assignedUser;
 }
