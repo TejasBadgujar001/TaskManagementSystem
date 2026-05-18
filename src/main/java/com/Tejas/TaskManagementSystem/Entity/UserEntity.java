@@ -7,6 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "tbl_user")
@@ -33,9 +34,9 @@ public class UserEntity {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    @OneToMany(mappedBy = "Postuser", cascade = CascadeType.ALL)
-    private TaskEntity  task;
+    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL)
+    private List<TaskEntity> task;
 
     @OneToMany(mappedBy = "assignedUser", cascade = CascadeType.ALL)
-    private TaskEntity userTask;
+    private List<TaskEntity> userTask;
 }
