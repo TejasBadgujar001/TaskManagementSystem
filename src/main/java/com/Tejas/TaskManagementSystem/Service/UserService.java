@@ -58,6 +58,12 @@ public class UserService {
         UserEntity entity= userRepository.findByEmail(email).orElseThrow(()->new RuntimeException("User Not Logged In"));
         return toResponse(entity);
     }
+    public UserEntity getLoggedInUserEntity(){
+        Authentication authentication = (Authentication) SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        UserEntity entity= userRepository.findByEmail(email).orElseThrow(()->new RuntimeException("User Not Logged In"));
+        return entity;
+    }
     public UserResponse getUserPublicProfile(String email){
         UserEntity user = userRepository.findByEmail(email).orElseThrow(()->new RuntimeException("No user with email id :"+email));
         return toResponse(user);
