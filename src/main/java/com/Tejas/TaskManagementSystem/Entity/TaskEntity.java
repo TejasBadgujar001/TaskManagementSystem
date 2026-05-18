@@ -3,8 +3,10 @@ package com.Tejas.TaskManagementSystem.Entity;
 import com.Tejas.TaskManagementSystem.Enum.Priority;
 import com.Tejas.TaskManagementSystem.Enum.Status;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
@@ -12,6 +14,8 @@ import java.time.LocalDate;
 @Table(name = "tbl_task")
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class TaskEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
