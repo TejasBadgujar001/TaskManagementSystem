@@ -4,6 +4,7 @@ import com.Tejas.TaskManagementSystem.DTO.TaskRequest;
 import com.Tejas.TaskManagementSystem.DTO.TaskResponse;
 import com.Tejas.TaskManagementSystem.DTO.UserResponse;
 import com.Tejas.TaskManagementSystem.Entity.TaskEntity;
+import com.Tejas.TaskManagementSystem.Entity.UserEntity;
 import com.Tejas.TaskManagementSystem.Repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,15 +27,20 @@ public class TaskService {
 
     //Update Task
     public TaskResponse updateTask(Long id, TaskRequest request){
-        TaskEntity entity= taskRepository.findById(id).orElseThrow(()->new RuntimeException("Task not exist"));
-        entity.setTitle(request.getTitle());
-        entity.setPriority(request.getPriority());
-        entity.setDescription(request.getDescription());
-        entity.setDueDate(request.getDueDate());
-        entity.setStatus(request.getStatus());
-        entity.setAssignedUser(request.getAssignedUser());
-
-        return toResponse(entity);
+        UserResponse response = userService.getLoggedInUser();
+        TaskEntity entity = taskRepository.findById(id).orElseThrow(()->new RuntimeException("Task not found with id: "+id));
+        if(entity.getCreatedBy().getId().equals(response.getId())) {
+            entity.setTitle(request.getTitle());
+            entity.setPriority(request.getPriority());
+            entity.setDescription(request.getDescription());
+            entity.setDueDate(request.getDueDate());
+            entity.setStatus(request.getStatus());
+            entity.setAssignedUser(request.getAssignedUser());
+            taskRepository.save(entity);
+            return toResponse(entity);
+        }else{
+            throw new RuntimeException("You are not allowed to update this task");
+        }
     }
 
     //Methods for fetching Task
@@ -54,7 +60,7 @@ public class TaskService {
         return list.stream().map(entity -> toResponse(entity)).collect(Collectors.toList());
     }
 
-    public List<TaskResponse> getAllPostedTaskbyUser(){
+    public List<TaskResponse> getAllPostedTaskByUser(){
         UserResponse response = userService.getLoggedInUser();
         List<TaskEntity> list = taskRepository.findByCreatedById(response.getId()).orElseThrow(()->new RuntimeException("No task Posted By You"));
         return list.stream().map(entity -> toResponse(entity)).collect(Collectors.toList());
@@ -62,24 +68,26 @@ public class TaskService {
 
     //Delete Task
     public String deleteTask(Long id){
-        try {
-            TaskEntity entity = taskRepository.findById(id).orElseThrow(() -> new RuntimeException("Task not exist"));
-            taskRepository.deleteById(entity.getId());
-            return "Task deleted";
-        }catch (Exception e){
-            return "Task not found";
-        }
+        UserResponse response = userService.getLoggedInUser();
+        TaskEntity entity = taskRepository.findById(id).orElseThrow(() -> new RuntimeException("Task not exist"));
+            if(entity.getCreatedBy().getId().equals(response.getId())) {
+                taskRepository.deleteById(entity.getId());
+                return "Task deleted";
+            }else {
+                throw new RuntimeException("You are not allowed to delete this task");
+            }
     }
 
 
     //Helper methods
     private TaskEntity toEntity(TaskRequest request){
+        UserEntity entity= userService.getLoggedInUserEntity();
         return TaskEntity.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .priority(request.getPriority())
                 .status(request.getStatus())
-                .createdBy(request.getCreatedBy())
+                .createdBy(entity)
                 .assignedUser(request.getAssignedUser())
                 .dueDate(request.getDueDate())
                 .build();
