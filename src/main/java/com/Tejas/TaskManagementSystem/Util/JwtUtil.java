@@ -29,6 +29,7 @@ public class JwtUtil {
         Date expiryDate = new Date(System.currentTimeMillis()+1000*60*60);//1hr
         return Jwts.builder()
                 .setClaims(Map.of())
+                .setSubject(username)
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(getKey())
