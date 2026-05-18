@@ -18,6 +18,5 @@ public class TaskRequest {
     private Priority priority;
     private Status status;
     private LocalDate dueDate;
-    private UserEntity createdBy;
-    private UserEntity assignedUser;
+    private Long assignedUser;
 }
