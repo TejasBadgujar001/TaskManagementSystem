@@ -44,7 +44,8 @@ public class TaskController {
         return new ResponseEntity<>(responses,HttpStatus.OK);
     }
 
-    @GetMapping("/assigned")
+    //This API is for to check how many task assigned to us
+    @GetMapping("/myTask")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER','MEMBER')")
     public ResponseEntity<List<TaskResponse>> getAllTaskAssignedToUser(){
         List<TaskResponse> responses = service.getTaskForUser();
