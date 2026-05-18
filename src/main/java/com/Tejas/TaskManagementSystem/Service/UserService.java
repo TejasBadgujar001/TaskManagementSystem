@@ -65,12 +65,16 @@ public class UserService {
 
     //Update User Profile
     public UserResponse updateUser(Long id,UserRequest request){
-        UserEntity entity = toEntity(request);
-        entity = userRepository.findById(entity.getId()).orElseThrow(()->new RuntimeException("User Not Found"));
-        entity.setName(request.getName());
-        entity.setRole(request.getRole());
-        entity.setPassword(passwordEncoder.encode(request.getPassword()));
-        return toResponse(entity);
+        if(id.equals(getLoggedInUser().getId())) {
+            UserEntity entity = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User Not Found"));
+            entity.setName(request.getName());
+            entity.setRole(request.getRole());
+            entity.setPassword(passwordEncoder.encode(request.getPassword()));
+            userRepository.save(entity);
+            return toResponse(entity);
+        }else{
+            throw new RuntimeException("You cannot update another user's profile");
+        }
     }
 
     public Map<String,Object> authenticateAndGenerateToken(AuthDto authDto){
