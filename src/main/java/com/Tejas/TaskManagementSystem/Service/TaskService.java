@@ -29,13 +29,14 @@ public class TaskService {
     public TaskResponse updateTask(Long id, TaskRequest request){
         UserResponse response = userService.getLoggedInUser();
         TaskEntity entity = taskRepository.findById(id).orElseThrow(()->new RuntimeException("Task not found with id: "+id));
+        UserEntity assignedUser = userService.getUserEntity(request.getAssignedUser());
         if(entity.getCreatedBy().getId().equals(response.getId())) {
             entity.setTitle(request.getTitle());
             entity.setPriority(request.getPriority());
             entity.setDescription(request.getDescription());
             entity.setDueDate(request.getDueDate());
             entity.setStatus(request.getStatus());
-            entity.setAssignedUser(request.getAssignedUser());
+            entity.setAssignedUser(assignedUser);
             taskRepository.save(entity);
             return toResponse(entity);
         }else{
