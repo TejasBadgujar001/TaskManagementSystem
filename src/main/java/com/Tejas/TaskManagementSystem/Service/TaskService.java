@@ -82,13 +82,14 @@ public class TaskService {
     //Helper methods
     private TaskEntity toEntity(TaskRequest request){
         UserEntity entity= userService.getLoggedInUserEntity();
+        UserEntity assignedUser = userService.getUserEntity(request.getAssignedUser());
         return TaskEntity.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .priority(request.getPriority())
                 .status(request.getStatus())
                 .createdBy(entity)
-                .assignedUser(request.getAssignedUser())
+                .assignedUser(assignedUser)
                 .dueDate(request.getDueDate())
                 .build();
     }
