@@ -36,7 +36,7 @@ public class TaskEntity {
     private UserEntity createdBy;
 
     @ManyToOne
-    @JoinColumn(name = "assginedTo")
+    @JoinColumn(name = "assignedTo")
     private UserEntity assignedUser;
 
 }
