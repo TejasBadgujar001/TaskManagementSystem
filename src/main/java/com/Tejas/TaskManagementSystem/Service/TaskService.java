@@ -96,14 +96,19 @@ public class TaskService {
     }
 
     private TaskResponse toResponse(TaskEntity entity){
+        UserEntity createdBy1= entity.getCreatedBy();
+        UserEntity assignedUser1 = entity.getAssignedUser();
+        UserResponse createdBy2=  UserResponse.builder().name(createdBy1.getName()).email(createdBy1.getEmail()).id(createdBy1.getId()).role(createdBy1.getRole()).build();
+        UserResponse assignedUser2 = UserResponse.builder().name(assignedUser1.getName()).email(assignedUser1.getEmail()).id(assignedUser1.getId()).role(assignedUser1.getRole()).build();
+
         return TaskResponse.builder()
                 .id(entity.getId())
                 .title(entity.getTitle())
                 .description(entity.getDescription())
                 .priority(entity.getPriority())
                 .status(entity.getStatus())
-                .createdBy(entity.getCreatedBy())
-                .assignedUser(entity.getAssignedUser())
+                .createdBy(createdBy2)
+                .assignedUser(assignedUser2)
                 .dueDate(entity.getDueDate())
                 .build();
     }
