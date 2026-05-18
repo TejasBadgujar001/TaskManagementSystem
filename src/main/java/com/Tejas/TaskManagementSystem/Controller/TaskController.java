@@ -51,6 +51,7 @@ public class TaskController {
         List<TaskResponse> responses = service.getTaskForUser();
         return new ResponseEntity<>(responses,HttpStatus.OK);
     }
+
     @GetMapping("/{taskId}")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER','MEMBER')")
     public ResponseEntity<TaskResponse> getTaskById(@PathVariable Long taskId){
