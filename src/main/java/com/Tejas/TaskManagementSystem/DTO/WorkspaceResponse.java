@@ -2,6 +2,7 @@ package com.Tejas.TaskManagementSystem.DTO;
 
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @AllArgsConstructor
@@ -14,6 +15,7 @@ public class WorkspaceResponse {
     private String  name;
     private String description;
     private UserResponse createdBy;
+    private LocalDateTime createdAt;
     private List<TaskResponse> tasks;
     private List<UserResponse> allocatedUser;
 }

@@ -81,7 +81,7 @@ public class TaskService {
 
 
     //Helper methods
-    private TaskEntity toEntity(TaskRequest request){
+    public TaskEntity toEntity(TaskRequest request){
         UserEntity entity= userService.getLoggedInUserEntity();
         UserEntity assignedUser = userService.getUserEntity(request.getAssignedUser());
         return TaskEntity.builder()
@@ -95,7 +95,7 @@ public class TaskService {
                 .build();
     }
 
-    private TaskResponse toResponse(TaskEntity entity){
+    public TaskResponse toResponse(TaskEntity entity){
         UserEntity createdBy1= entity.getCreatedBy();
         UserEntity assignedUser1 = entity.getAssignedUser();
         UserResponse createdBy2=  UserResponse.builder().name(createdBy1.getName()).email(createdBy1.getEmail()).id(createdBy1.getId()).role(createdBy1.getRole()).build();

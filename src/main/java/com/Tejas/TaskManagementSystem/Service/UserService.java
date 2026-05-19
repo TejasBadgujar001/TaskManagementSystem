@@ -72,6 +72,10 @@ public class UserService {
         UserEntity user = userRepository.findByEmail(email).orElseThrow(()->new RuntimeException("No user with email id :"+email));
         return toResponse(user);
     }
+    //this method user in workspace Service to add users for workspace
+    public List<UserEntity> getAllUserByIds(List<Long>ids){
+         return userRepository.findAllById(ids);
+    }
 
     //Update User Profile
     public UserResponse updateUser(Long id,UserRequest request){
@@ -113,7 +117,7 @@ public class UserService {
     }
 
     //Helper methods
-    private UserEntity toEntity(UserRequest request){
+    public UserEntity toEntity(UserRequest request){
         return UserEntity.builder()
                 .name(request.getName())
                 .email(request.getEmail())
@@ -122,7 +126,7 @@ public class UserService {
                 .build();
     }
 
-    private UserResponse toResponse(UserEntity entity){
+    public UserResponse toResponse(UserEntity entity){
         return UserResponse.builder()
                 .id(entity.getId())
                 .name(entity.getName())
