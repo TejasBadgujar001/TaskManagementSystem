@@ -43,4 +43,8 @@ public class TaskEntity {
     @JoinColumn(name = "assignedTo")
     private UserEntity assignedUser;
 
+    @ManyToOne
+    @JoinColumn(name = "workspace_id")
+    private Workspace workspace;
+
 }

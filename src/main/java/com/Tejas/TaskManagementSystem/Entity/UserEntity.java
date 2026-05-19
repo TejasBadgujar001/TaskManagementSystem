@@ -41,4 +41,11 @@ public class UserEntity {
 
     @OneToMany(mappedBy = "assignedUser", cascade = CascadeType.ALL)
     private List<TaskEntity> userTask;
+
+    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL)
+    private List<Workspace> workspaces;
+
+    @ManyToMany(mappedBy = "allocatedUsers")
+    private List<Workspace> workspaceList;
 }
+
