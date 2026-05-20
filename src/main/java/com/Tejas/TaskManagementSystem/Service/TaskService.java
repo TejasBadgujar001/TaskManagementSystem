@@ -3,9 +3,12 @@ package com.Tejas.TaskManagementSystem.Service;
 import com.Tejas.TaskManagementSystem.DTO.TaskRequest;
 import com.Tejas.TaskManagementSystem.DTO.TaskResponse;
 import com.Tejas.TaskManagementSystem.DTO.UserResponse;
+import com.Tejas.TaskManagementSystem.DTO.WorkspaceResponse;
 import com.Tejas.TaskManagementSystem.Entity.TaskEntity;
 import com.Tejas.TaskManagementSystem.Entity.UserEntity;
+import com.Tejas.TaskManagementSystem.Entity.Workspace;
 import com.Tejas.TaskManagementSystem.Repository.TaskRepository;
+import com.Tejas.TaskManagementSystem.Repository.WorkspaceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,12 +20,20 @@ import java.util.stream.Collectors;
 public class TaskService {
     private final TaskRepository taskRepository;
     private final UserService userService;
+    private final WorkspaceRepository workspaceRepository;
 
     //Post Task
     public TaskResponse addTask(TaskRequest request){
-        TaskEntity entity = toEntity(request);
-        entity = taskRepository.save(entity);
-        return toResponse(entity);
+        UserEntity user = userService.getLoggedInUserEntity();
+        Workspace workspace = workspaceRepository.findById(request.getWorkspace())
+                .orElseThrow(()->new RuntimeException("No Workspace found with this id: "+request.getWorkspace()));
+        if(user.getId().equals(workspace.getCreatedBy().getId())) {
+            TaskEntity entity = toEntity(request);
+            entity = taskRepository.save(entity);
+            return toResponse(entity);
+        }else {
+            throw new RuntimeException("You are not allowed to add task in this Workspace: "+workspace.getName());
+        }
     }
 
     //Update Task
@@ -84,6 +95,8 @@ public class TaskService {
     public TaskEntity toEntity(TaskRequest request){
         UserEntity entity= userService.getLoggedInUserEntity();
         UserEntity assignedUser = userService.getUserEntity(request.getAssignedUser());
+        Workspace workspace = workspaceRepository.findById(request.getWorkspace())
+                .orElseThrow(()->new RuntimeException("No Workspace with this id: "+request.getWorkspace()));
         return TaskEntity.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
@@ -92,6 +105,7 @@ public class TaskService {
                 .createdBy(entity)
                 .assignedUser(assignedUser)
                 .dueDate(request.getDueDate())
+                .workspace(workspace)
                 .build();
     }
 
@@ -100,7 +114,12 @@ public class TaskService {
         UserEntity assignedUser1 = entity.getAssignedUser();
         UserResponse createdBy2=  UserResponse.builder().name(createdBy1.getName()).email(createdBy1.getEmail()).id(createdBy1.getId()).role(createdBy1.getRole()).build();
         UserResponse assignedUser2 = UserResponse.builder().name(assignedUser1.getName()).email(assignedUser1.getEmail()).id(assignedUser1.getId()).role(assignedUser1.getRole()).build();
-
+        WorkspaceResponse workspaceResponse= WorkspaceResponse.builder()
+                .name(entity.getWorkspace().getName())
+                .description(entity.getWorkspace().getDescription())
+                .id(entity.getWorkspace().getId())
+                .createdAt(entity.getWorkspace().getCreatedAt())
+                .build();
         return TaskResponse.builder()
                 .id(entity.getId())
                 .title(entity.getTitle())
@@ -110,6 +129,7 @@ public class TaskService {
                 .createdBy(createdBy2)
                 .assignedUser(assignedUser2)
                 .dueDate(entity.getDueDate())
+                .workspace(workspaceResponse)
                 .build();
     }
 }

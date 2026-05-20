@@ -19,4 +19,5 @@ public class TaskRequest {
     private Status status;
     private LocalDate dueDate;
     private Long assignedUser;
+    private Long workspace;
 }

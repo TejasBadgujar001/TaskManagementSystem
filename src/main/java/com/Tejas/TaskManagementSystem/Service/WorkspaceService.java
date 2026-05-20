@@ -8,6 +8,7 @@ import com.Tejas.TaskManagementSystem.Entity.UserEntity;
 import com.Tejas.TaskManagementSystem.Entity.Workspace;
 import com.Tejas.TaskManagementSystem.Repository.WorkspaceRepository;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.jdbc.Work;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -74,8 +75,12 @@ public class WorkspaceService {
         Workspace workspace = workspaceRepository.findById(id)
                 .orElseThrow(()->new RuntimeException("No Workspace exist with this id: "+id));
         if(loggedInUser.getId().equals(workspace.getCreatedBy().getId())){
-            workspace.setName(request.getName());
-            workspace.setDescription(request.getDescription());
+            if(request.getName() != null){
+                workspace.setName(request.getName());
+            }
+            if(request.getDescription() != null){
+                workspace.setDescription(request.getDescription());
+            }
             workspaceRepository.save(workspace);
             return toResponse(workspace);
         }else{
@@ -114,7 +119,7 @@ public class WorkspaceService {
     }
 
     //Helper method
-    private Workspace toEntity(WorkspaceRequest request){
+    public Workspace toEntity(WorkspaceRequest request){
         return Workspace.builder()
                 .name(request.getName())
                 .description(request.getDescription())
@@ -122,7 +127,7 @@ public class WorkspaceService {
                 .build();
     }
 
-    private WorkspaceResponse toResponse(Workspace entity){
+    public WorkspaceResponse toResponse(Workspace entity){
         UserResponse response = UserResponse.builder()
                 .name(entity.getCreatedBy().getName())
                 .email(entity.getCreatedBy().getEmail())
@@ -165,5 +170,8 @@ public class WorkspaceService {
                 .allocatedUser(users)
                 .tasks(tasks)
                 .build();
+    }
+    public Workspace getWorkspaceEntity(Long id){
+        return workspaceRepository.findById(id).orElseThrow(()->new RuntimeException("No workspace exist with id: "+id));
     }
 }

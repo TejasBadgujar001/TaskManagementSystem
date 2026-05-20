@@ -21,4 +21,5 @@ public class TaskResponse {
     private LocalDate dueDate;
     private UserResponse createdBy;
     private UserResponse assignedUser;
+    private WorkspaceResponse workspace;
 }
