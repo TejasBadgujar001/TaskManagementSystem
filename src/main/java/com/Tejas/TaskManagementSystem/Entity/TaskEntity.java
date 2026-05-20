@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Table(name = "tbl_task")
@@ -46,5 +47,8 @@ public class TaskEntity {
     @ManyToOne
     @JoinColumn(name = "workspace_id")
     private Workspace workspace;
+
+    @OneToMany(mappedBy = "taskEntity",cascade = CascadeType.ALL)
+    private List<Comment> comments;
 
 }

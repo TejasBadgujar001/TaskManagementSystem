@@ -47,5 +47,8 @@ public class UserEntity {
 
     @ManyToMany(mappedBy = "allocatedUsers")
     private List<Workspace> workspaceList;
+
+    @OneToMany(mappedBy = "userEntity",cascade = CascadeType.ALL)
+    private List<Comment> comments;
 }
 
