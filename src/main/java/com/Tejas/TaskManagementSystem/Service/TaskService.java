@@ -132,4 +132,9 @@ public class TaskService {
                 .workspace(workspaceResponse)
                 .build();
     }
+
+    //Get taskEntity -> this method is used by comment Service
+    public TaskEntity getTaskEntityById(Long id){
+        return taskRepository.findById(id).orElseThrow(()->new RuntimeException("No task exist with id: "+id));
+    }
 }
