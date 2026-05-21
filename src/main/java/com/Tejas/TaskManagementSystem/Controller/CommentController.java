@@ -3,6 +3,7 @@ package com.Tejas.TaskManagementSystem.Controller;
 import com.Tejas.TaskManagementSystem.DTO.CommentRequest;
 import com.Tejas.TaskManagementSystem.DTO.CommentResponse;
 import com.Tejas.TaskManagementSystem.Service.CommentService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +21,7 @@ public class CommentController {
     //API for posting comments
     @PreAuthorize("hasAnyRole('MANAGER','MEMBER')")
     @PostMapping("/post/{id}")
-    public ResponseEntity<CommentResponse> addComment(@PathVariable Long id, @RequestBody CommentRequest request){
+    public ResponseEntity<CommentResponse> addComment(@PathVariable Long id, @Valid @RequestBody CommentRequest request){
         CommentResponse response = service.addComment(id,request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -28,7 +29,7 @@ public class CommentController {
     //API for updating comment
     @PreAuthorize("hasAnyRole('MANAGER','MEMBER')")
     @PutMapping("/update/{id}")
-    public ResponseEntity<CommentResponse> updateComment(@PathVariable Long id, @RequestBody CommentRequest request){
+    public ResponseEntity<CommentResponse> updateComment(@PathVariable Long id,@Valid @RequestBody CommentRequest request){
         CommentResponse response = service.updateComment(id,request);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

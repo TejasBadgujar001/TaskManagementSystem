@@ -5,6 +5,7 @@ import com.Tejas.TaskManagementSystem.DTO.UserResponse;
 import com.Tejas.TaskManagementSystem.DTO.WorkspaceRequest;
 import com.Tejas.TaskManagementSystem.DTO.WorkspaceResponse;
 import com.Tejas.TaskManagementSystem.Service.WorkspaceService;
+import jakarta.validation.Valid;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,7 +25,7 @@ public class WorkspaceController {
     //API for creating Workspace
     @PostMapping("/post")
     @PreAuthorize(("hasAnyRole('ADMIN','MANAGER')"))
-    public ResponseEntity<WorkspaceResponse> createWorkspace(@RequestBody WorkspaceRequest request){
+    public ResponseEntity<WorkspaceResponse> createWorkspace(@Valid @RequestBody WorkspaceRequest request){
         WorkspaceResponse response = service.createWorkspace(request);
         return  new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -32,7 +33,7 @@ public class WorkspaceController {
     //API for adding users to workspace
     @PostMapping("/post/users/{id}")
     @PreAuthorize(("hasAnyRole('ADMIN','MANAGER')"))
-    public ResponseEntity<WorkspaceResponse> addUsersToWorkspace(@PathVariable Long id, @RequestBody List<Long>ids){
+    public ResponseEntity<WorkspaceResponse> addUsersToWorkspace(@PathVariable Long id,@Valid @RequestBody List<Long>ids){
         return new ResponseEntity<>(service.addUserToWorkspace(id,ids),HttpStatus.OK);
     }
 
@@ -58,7 +59,7 @@ public class WorkspaceController {
     //API for update the workspace
     @PutMapping("/update/{id}")
     @PreAuthorize(("hasAnyRole('ADMIN','MANAGER')"))
-    public ResponseEntity<WorkspaceResponse> updateWorkspace(@PathVariable Long id,@RequestBody WorkspaceRequest request){
+    public ResponseEntity<WorkspaceResponse> updateWorkspace(@PathVariable Long id,@Valid @RequestBody WorkspaceRequest request){
         return new ResponseEntity<>(service.updateWorkspace(id,request),HttpStatus.OK);
     }
 

@@ -1,19 +1,16 @@
 package com.Tejas.TaskManagementSystem.Controller;
 
-import com.Tejas.TaskManagementSystem.DTO.AuthDto;
 import com.Tejas.TaskManagementSystem.DTO.TaskRequest;
 import com.Tejas.TaskManagementSystem.DTO.TaskResponse;
-import com.Tejas.TaskManagementSystem.DTO.UserResponse;
 import com.Tejas.TaskManagementSystem.Service.TaskService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.swing.*;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/task")
@@ -24,7 +21,7 @@ public class TaskController {
     //API for posting task
     @PostMapping("/post")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    public ResponseEntity<TaskResponse> postTask(@RequestBody TaskRequest request){
+    public ResponseEntity<TaskResponse> postTask(@Valid @RequestBody TaskRequest request){
         TaskResponse response= service.addTask(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -61,7 +58,7 @@ public class TaskController {
     //API for update task
     @PutMapping("/update/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    public ResponseEntity<TaskResponse> updateTask(@PathVariable Long id, @RequestBody TaskRequest request){
+    public ResponseEntity<TaskResponse> updateTask(@PathVariable Long id,@Valid @RequestBody TaskRequest request){
         TaskResponse response = service.updateTask(id,request);
         return new ResponseEntity<>(response,HttpStatus.OK);
     }

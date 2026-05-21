@@ -4,6 +4,7 @@ import com.Tejas.TaskManagementSystem.DTO.AuthDto;
 import com.Tejas.TaskManagementSystem.DTO.UserRequest;
 import com.Tejas.TaskManagementSystem.DTO.UserResponse;
 import com.Tejas.TaskManagementSystem.Service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +22,7 @@ public class UserController {
 
     //API for SignUp
     @PostMapping("/signup")
-    public ResponseEntity<UserResponse> signUp(@RequestBody UserRequest request){
+    public ResponseEntity<UserResponse> signUp(@Valid @RequestBody UserRequest request){
         UserResponse response = service.registerUser(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -58,7 +59,7 @@ public class UserController {
     //API for update user profile
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER','MEMBER')")
     @PutMapping("/update/{id}")
-    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @RequestBody UserRequest request){
+    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id,@Valid @RequestBody UserRequest request){
         UserResponse response = service.updateUser(id,request);
         return new  ResponseEntity<>(response,HttpStatus.OK);
     }
@@ -73,7 +74,7 @@ public class UserController {
 
     //API for Login
     @PostMapping("/login")
-    public ResponseEntity<Map<String,Object>> signIn(@RequestBody AuthDto dto){
+    public ResponseEntity<Map<String,Object>> signIn(@Valid @RequestBody AuthDto dto){
         Map<String,Object> res = service.authenticateAndGenerateToken(dto);
         return new ResponseEntity<>(res,HttpStatus.OK);
     }

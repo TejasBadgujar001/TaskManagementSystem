@@ -46,7 +46,6 @@ public class TaskService {
             entity.setPriority(request.getPriority());
             entity.setDescription(request.getDescription());
             entity.setDueDate(request.getDueDate());
-            entity.setStatus(request.getStatus());
             entity.setAssignedUser(assignedUser);
             taskRepository.save(entity);
             return toResponse(entity);
@@ -101,7 +100,6 @@ public class TaskService {
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .priority(request.getPriority())
-                .status(request.getStatus())
                 .createdBy(entity)
                 .assignedUser(assignedUser)
                 .dueDate(request.getDueDate())
