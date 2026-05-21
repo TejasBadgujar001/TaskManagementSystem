@@ -47,7 +47,7 @@ public class CommentController {
     public ResponseEntity<List<CommentResponse>> getAllCommentsForTask(@PathVariable Long id){
         return  new ResponseEntity<>(service.getAllCommentsForTask(id),HttpStatus.OK);
     }
-    //API for fetching all comments for task
+    //API for fetching all comments for user
     @PreAuthorize("hasAnyRole('MEMBER','MANAGER')")
     @GetMapping("/user/{id}")
     public ResponseEntity<List<CommentResponse>> getAllCommentsForUser(@PathVariable Long id){
