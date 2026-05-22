@@ -7,6 +7,8 @@ import com.Tejas.TaskManagementSystem.DTO.WorkspaceResponse;
 import com.Tejas.TaskManagementSystem.Entity.TaskEntity;
 import com.Tejas.TaskManagementSystem.Entity.UserEntity;
 import com.Tejas.TaskManagementSystem.Entity.Workspace;
+import com.Tejas.TaskManagementSystem.Exception.ResourceNotFoundException;
+import com.Tejas.TaskManagementSystem.Exception.UnauthorizedException;
 import com.Tejas.TaskManagementSystem.Repository.TaskRepository;
 import com.Tejas.TaskManagementSystem.Repository.WorkspaceRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,20 +28,21 @@ public class TaskService {
     public TaskResponse addTask(TaskRequest request){
         UserEntity user = userService.getLoggedInUserEntity();
         Workspace workspace = workspaceRepository.findById(request.getWorkspace())
-                .orElseThrow(()->new RuntimeException("No Workspace found with this id: "+request.getWorkspace()));
+                .orElseThrow(()->new ResourceNotFoundException("No Workspace found with this id: "+request.getWorkspace()));
         if(user.getId().equals(workspace.getCreatedBy().getId())) {
             TaskEntity entity = toEntity(request);
             entity = taskRepository.save(entity);
             return toResponse(entity);
         }else {
-            throw new RuntimeException("You are not allowed to add task in this Workspace: "+workspace.getName());
+            throw new UnauthorizedException("You are not allowed to add task in this Workspace: "+workspace.getName());
         }
     }
 
     //Update Task
     public TaskResponse updateTask(Long id, TaskRequest request){
         UserResponse response = userService.getLoggedInUser();
-        TaskEntity entity = taskRepository.findById(id).orElseThrow(()->new RuntimeException("Task not found with id: "+id));
+        TaskEntity entity = taskRepository.findById(id)
+                .orElseThrow(()->new ResourceNotFoundException("Task not found with id: "+id));
         UserEntity assignedUser = userService.getUserEntity(request.getAssignedUser());
         if(entity.getCreatedBy().getId().equals(response.getId())) {
             entity.setTitle(request.getTitle());
@@ -50,7 +53,7 @@ public class TaskService {
             taskRepository.save(entity);
             return toResponse(entity);
         }else{
-            throw new RuntimeException("You are not allowed to update this task");
+            throw new UnauthorizedException("You are not allowed to update task with id: "+id);
         }
     }
 
@@ -61,31 +64,33 @@ public class TaskService {
     }
 
     public TaskResponse getTaskById(Long id){
-        TaskEntity entity= taskRepository.findById(id).orElseThrow(()->new RuntimeException("No Task Found"));
+        TaskEntity entity= taskRepository.findById(id)
+                .orElseThrow(()->new ResourceNotFoundException("No Task Found with id: "+id));
         return toResponse(entity);
     }
 
     public List<TaskResponse> getTaskForUser(){
         UserResponse response = userService.getLoggedInUser();
-        List<TaskEntity> list = taskRepository.findByAssignedUserId(response.getId()).orElseThrow(()->new RuntimeException("No task assigned"));
+        List<TaskEntity> list = taskRepository.findByAssignedUserId(response.getId());
         return list.stream().map(entity -> toResponse(entity)).collect(Collectors.toList());
     }
 
     public List<TaskResponse> getAllPostedTaskByUser(){
         UserResponse response = userService.getLoggedInUser();
-        List<TaskEntity> list = taskRepository.findByCreatedById(response.getId()).orElseThrow(()->new RuntimeException("No task Posted By You"));
+        List<TaskEntity> list = taskRepository.findByCreatedById(response.getId());
         return list.stream().map(entity -> toResponse(entity)).collect(Collectors.toList());
     }
 
     //Delete Task
     public String deleteTask(Long id){
         UserResponse response = userService.getLoggedInUser();
-        TaskEntity entity = taskRepository.findById(id).orElseThrow(() -> new RuntimeException("Task not exist"));
+        TaskEntity entity = taskRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Task Not Found with id: "+id));
             if(entity.getCreatedBy().getId().equals(response.getId())) {
                 taskRepository.deleteById(entity.getId());
-                return "Task deleted";
+                return "Task deleted Successfully";
             }else {
-                throw new RuntimeException("You are not allowed to delete this task");
+                throw new UnauthorizedException("You are not allowed to delete task with id: "+id);
             }
     }
 
@@ -95,7 +100,7 @@ public class TaskService {
         UserEntity entity= userService.getLoggedInUserEntity();
         UserEntity assignedUser = userService.getUserEntity(request.getAssignedUser());
         Workspace workspace = workspaceRepository.findById(request.getWorkspace())
-                .orElseThrow(()->new RuntimeException("No Workspace with this id: "+request.getWorkspace()));
+                .orElseThrow(()->new ResourceNotFoundException("No Workspace with this id: "+request.getWorkspace()));
         return TaskEntity.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
@@ -110,8 +115,8 @@ public class TaskService {
     public TaskResponse toResponse(TaskEntity entity){
         UserEntity createdBy1= entity.getCreatedBy();
         UserEntity assignedUser1 = entity.getAssignedUser();
-        UserResponse createdBy2=  UserResponse.builder().name(createdBy1.getName()).email(createdBy1.getEmail()).id(createdBy1.getId()).role(createdBy1.getRole()).build();
-        UserResponse assignedUser2 = UserResponse.builder().name(assignedUser1.getName()).email(assignedUser1.getEmail()).id(assignedUser1.getId()).role(assignedUser1.getRole()).build();
+        UserResponse createdBy2=  userService.toResponse(createdBy1);
+        UserResponse assignedUser2 = userService.toResponse(assignedUser1);
         WorkspaceResponse workspaceResponse= WorkspaceResponse.builder()
                 .name(entity.getWorkspace().getName())
                 .description(entity.getWorkspace().getDescription())
@@ -133,6 +138,7 @@ public class TaskService {
 
     //Get taskEntity -> this method is used by comment Service
     public TaskEntity getTaskEntityById(Long id){
-        return taskRepository.findById(id).orElseThrow(()->new RuntimeException("No task exist with id: "+id));
+        return taskRepository.findById(id)
+                .orElseThrow(()->new ResourceNotFoundException("No task exist with id: "+id));
     }
 }

@@ -6,6 +6,8 @@ import com.Tejas.TaskManagementSystem.DTO.TaskResponse;
 import com.Tejas.TaskManagementSystem.Entity.Comment;
 import com.Tejas.TaskManagementSystem.Entity.TaskEntity;
 import com.Tejas.TaskManagementSystem.Entity.UserEntity;
+import com.Tejas.TaskManagementSystem.Exception.ResourceNotFoundException;
+import com.Tejas.TaskManagementSystem.Exception.UnauthorizedException;
 import com.Tejas.TaskManagementSystem.Repository.CommentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,20 +35,20 @@ public class CommentService {
     public CommentResponse updateComment(Long id,CommentRequest request){
         UserEntity entity = userService.getLoggedInUserEntity();
         Comment comment= commentRepository.findById(id)
-                .orElseThrow(()->new RuntimeException("No Comment with id"));
+                .orElseThrow(()->new ResourceNotFoundException("No Comment with id: "+id));
         if(entity.getId().equals(comment.getUserEntity().getId())){
             comment.setContent(request.getContent());
             commentRepository.save(comment);
             return toResponse(comment);
         }else {
-            throw new RuntimeException("You are not allowed to update this comment");
+            throw new UnauthorizedException("You are not allowed to update comment with id: "+id);
         }
     }
 
     //Get all comment for task
     public List<CommentResponse> getAllCommentsForTask(Long id){
         TaskResponse response = taskService.getTaskById(id);
-        return commentRepository.findByTaskEntityId(response.getId())
+        return commentRepository.findByTaskEntityId(id)
                 .stream().map(comment->toResponse(comment))
                 .collect(Collectors.toList());
     }
@@ -58,7 +60,7 @@ public class CommentService {
                     .stream().map(comment->toResponse(comment))
                     .collect(Collectors.toList());
         }else {
-            throw new RuntimeException("You are not allowed to see comment for user with id: "+id);
+            throw new UnauthorizedException("You are not allowed to see comment of user with id: "+id);
         }
     }
 
@@ -66,12 +68,12 @@ public class CommentService {
     public String deleteComment(Long id){
         UserEntity entity = userService.getLoggedInUserEntity();
         Comment comment= commentRepository.findById(id)
-                .orElseThrow(()->new RuntimeException("No Comment with id"));
+                .orElseThrow(()->new ResourceNotFoundException("No Comment with id: "+id));
         if(entity.getId().equals(comment.getUserEntity().getId())){
             commentRepository.deleteById(id);
-            return "Comment deleted";
+            return "Comment deleted Successfully";
         }else {
-            throw new RuntimeException("You are not allowed to update this comment");
+            throw new UnauthorizedException("You are not allowed to delete comment with id: "+id);
         }
     }
 

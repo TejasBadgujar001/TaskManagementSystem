@@ -51,4 +51,10 @@ public class TaskEntity {
     @OneToMany(mappedBy = "taskEntity",cascade = CascadeType.ALL)
     private List<Comment> comments;
 
+    @PrePersist
+    public void setDefaultStatus() {
+        if (status == null) {
+            status = Status.TODO;
+        }
+    }
 }

@@ -4,6 +4,8 @@ import com.Tejas.TaskManagementSystem.DTO.AuthDto;
 import com.Tejas.TaskManagementSystem.DTO.UserRequest;
 import com.Tejas.TaskManagementSystem.DTO.UserResponse;
 import com.Tejas.TaskManagementSystem.Entity.UserEntity;
+import com.Tejas.TaskManagementSystem.Exception.ResourceNotFoundException;
+import com.Tejas.TaskManagementSystem.Exception.UnauthorizedException;
 import com.Tejas.TaskManagementSystem.Repository.UserRepository;
 import com.Tejas.TaskManagementSystem.Util.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -39,15 +41,18 @@ public class UserService {
         return list.stream().map(user->toResponse(user)).collect(Collectors.toList());
     }
     public  UserResponse getUserById(Long id){
-        UserEntity entity = userRepository.findById(id).orElseThrow(()->new RuntimeException("User Not Found"));
+        UserEntity entity = userRepository.findById(id)
+                .orElseThrow(()->new ResourceNotFoundException("User Not Found with id"+id));
         return toResponse(entity);
     }
     public  List<UserResponse> getUserByName(String name){
-        List<UserEntity> list = userRepository.findByName(name).orElseThrow(()->new RuntimeException("User Not Found"));
+        List<UserEntity> list = userRepository.findByName(name)
+                .orElseThrow(()->new ResourceNotFoundException("User Not Found with name: "+name));
         return list.stream().map(user->toResponse(user)).collect(Collectors.toList());
     }
     public  UserResponse getUserByEmail(String email){
-        UserEntity entity = userRepository.findByEmail(email).orElseThrow(()->new RuntimeException("User Not Found"));
+        UserEntity entity = userRepository.findByEmail(email)
+                .orElseThrow(()->new ResourceNotFoundException("User Not Found with email: "+email));
         return toResponse(entity);
     }
 
@@ -55,21 +60,25 @@ public class UserService {
     public UserResponse getLoggedInUser(){
         Authentication authentication = (Authentication) SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
-        UserEntity entity= userRepository.findByEmail(email).orElseThrow(()->new RuntimeException("User Not Logged In"));
+        UserEntity entity= userRepository.findByEmail(email)
+                .orElseThrow(()->new RuntimeException("User Not Logged In"));
         return toResponse(entity);
     }
     public UserEntity getLoggedInUserEntity(){
         Authentication authentication = (Authentication) SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
-        UserEntity entity= userRepository.findByEmail(email).orElseThrow(()->new RuntimeException("User Not Logged In"));
+        UserEntity entity= userRepository.findByEmail(email)
+                .orElseThrow(()->new RuntimeException("User Not Logged In"));
         return entity;
     }
     public UserEntity getUserEntity(Long id){
-        return userRepository.findById(id).orElseThrow(()->new RuntimeException("No user for id: "+id));
+        return userRepository.findById(id)
+                .orElseThrow(()->new ResourceNotFoundException("User Not Found with id: "+id));
     }
 
     public UserResponse getUserPublicProfile(String email){
-        UserEntity user = userRepository.findByEmail(email).orElseThrow(()->new RuntimeException("No user with email id :"+email));
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(()->new ResourceNotFoundException("No user with email id :"+email));
         return toResponse(user);
     }
     //this method user in workspace Service to add users for workspace
@@ -80,40 +89,32 @@ public class UserService {
     //Update User Profile
     public UserResponse updateUser(Long id,UserRequest request){
         if(id.equals(getLoggedInUser().getId())) {
-            UserEntity entity = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User Not Found"));
+            UserEntity entity = userRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("User Not Found with id:  "+id));
             entity.setName(request.getName());
             entity.setRole(request.getRole());
             entity.setPassword(passwordEncoder.encode(request.getPassword()));
             userRepository.save(entity);
             return toResponse(entity);
         }else{
-            throw new RuntimeException("You cannot update another user's profile");
+            throw new UnauthorizedException("You cannot update another user's profile");
         }
     }
 
     public Map<String,Object> authenticateAndGenerateToken(AuthDto authDto){
-        try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authDto.getEmail(), authDto.getPassword()));
             String token = jwtUtil.generateToken(authDto.getEmail());
             return Map.of(
                 "User",getUserPublicProfile(authDto.getEmail()),
                 "Token",token
             );
-        }catch (Exception e){
-            return Map.of(
-                    "Error",e.getMessage()
-            );
-        }
     }
 
     public String deleteUser(Long id){
-        try {
-            UserEntity entity = userRepository.findById(id).orElseThrow(()->new RuntimeException("User Not Found"));
-            userRepository.deleteById(entity.getId());
-            return "User Deleted";
-        }catch (Exception e){
-            return "User Not Found";
-        }
+        UserEntity entity = userRepository.findById(id)
+                .orElseThrow(()->new ResourceNotFoundException("User Not Found with id: "+id));
+        userRepository.deleteById(entity.getId());
+        return "User Deleted Successfully";
     }
 
     //Helper methods
