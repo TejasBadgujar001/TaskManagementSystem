@@ -10,6 +10,8 @@ import com.Tejas.TaskManagementSystem.Exception.ResourceNotFoundException;
 import com.Tejas.TaskManagementSystem.Exception.UnauthorizedException;
 import com.Tejas.TaskManagementSystem.Repository.WorkspaceRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,19 +23,26 @@ public class WorkspaceService {
     private final WorkspaceRepository workspaceRepository;
     private final UserService userService;
     private final TaskService taskService;
+    private static final Logger logger = LoggerFactory.getLogger(WorkspaceService.class);
 
     //Create Workspace
     public WorkspaceResponse createWorkspace(WorkspaceRequest request){
+        logger.info("Creating workspace with name : {}", request.getName());
         Workspace entity = toEntity(request);
         entity = workspaceRepository.save(entity);
+        logger.info("Created workspace successfully with name : {}", request.getName());
         return toResponse(entity);
     }
 
     //Add Users to Workspace
     public WorkspaceResponse addUserToWorkspace(Long id, List<Long> ids){
         UserResponse response = userService.getLoggedInUser();
+        logger.info("Attempting to add users in workspace with id: {}",id);
         Workspace workspace= workspaceRepository.findById(id)
-                .orElseThrow(()->new ResourceNotFoundException("No Workspace exist with id: "+id));
+                .orElseThrow(()->{
+                    logger.warn("Workspace not found for id: {}", id);
+                    return new ResourceNotFoundException("No Workspace exist with id: "+id);
+                });
         if(response.getId().equals(workspace.getCreatedBy().getId())) {
             List<UserEntity> userEntities = userService.getAllUserByIds(ids);
             if(workspace.getAllocatedUsers() == null){
@@ -42,14 +51,17 @@ public class WorkspaceService {
                 workspace.getAllocatedUsers().addAll(userEntities);
             }
             workspace = workspaceRepository.save(workspace);
+            logger.info("User with ids {} are added to workspace with id: {}",ids,id);
             return toResponse(workspace);
         }else{
+            logger.warn("Unauthorized profile attempting to add users to workspace with id: {}", id);
             throw new UnauthorizedException("You are not allowed to add users to workspace with id: "+id);
         }
     }
 
     //GetAllWorkspace
     public List<WorkspaceResponse> getAllWorkspace(){
+        logger.info("Fetching all workspaces");
          List<WorkspaceResponse> responses = workspaceRepository.findAll()
                  .stream().map(workspace -> toResponse(workspace))
                  .collect(Collectors.toList());
@@ -58,23 +70,35 @@ public class WorkspaceService {
 
     //GetWorkspaceById
     public WorkspaceResponse getWorkspaceById(Long id){
+        logger.info("Fetching workspace for id: {}", id);
         Workspace entity = workspaceRepository.findById(id)
-                .orElseThrow(()->new ResourceNotFoundException("No Workspace found with this id "+id));
+                .orElseThrow(()->{
+                    logger.warn("Workspace not found for id: {}",id);
+                    return new ResourceNotFoundException("No Workspace found with this id "+id);
+                });
         return toResponse(entity);
     }
 
     //GetWorkspaceByName
     public WorkspaceResponse getWorkspaceByName(String  name){
+        logger.info("Fetching workspace for name: {}", name);
         Workspace entity = workspaceRepository.findByName(name)
-                .orElseThrow(()->new ResourceNotFoundException("No Workspace with name: "+name));
+                .orElseThrow(()->{
+                    logger.warn("Workspace not found for name: {}",name);
+                    return new ResourceNotFoundException("No Workspace with name: "+name);
+                });
         return toResponse(entity);
     }
 
     //Update Workspace
     public WorkspaceResponse updateWorkspace(Long id, WorkspaceRequest request){
+        logger.info("Attempting to update workspace for id: {}",id);
         UserResponse loggedInUser = userService.getLoggedInUser();
         Workspace workspace = workspaceRepository.findById(id)
-                .orElseThrow(()->new ResourceNotFoundException("No Workspace exist with this id: "+id));
+                .orElseThrow(()->{
+                    logger.warn("Workspace not found for id: {}",id);
+                    return new ResourceNotFoundException("No Workspace exist with this id: "+id);
+                });
         if(loggedInUser.getId().equals(workspace.getCreatedBy().getId())){
             if(request.getName() != null){
                 workspace.setName(request.getName());
@@ -83,20 +107,28 @@ public class WorkspaceService {
                 workspace.setDescription(request.getDescription());
             }
             workspaceRepository.save(workspace);
+            logger.info("Workspace Updated successfully for id: {}", id);
             return toResponse(workspace);
         }else{
+            logger.warn("Unauthorized profile attempting to update workspace with id: {}", id);
             throw new UnauthorizedException("You are not allowed to update workspace with id: "+id);
         }
     }
     //Delete Workspace
     public String deleteWorkspace(Long id){
+        logger.info("Attempting to delete  workspace for id: {}",id);
         UserResponse loggedInUser = userService.getLoggedInUser();
         Workspace workspace = workspaceRepository.findById(id)
-                .orElseThrow(()->new ResourceNotFoundException("No Workspace exist with this id: "+id));
+                .orElseThrow(()->{
+                    logger.warn("Workspace not found for id: {}",id);
+                    return new ResourceNotFoundException("No Workspace exist with this id: "+id);
+                });
         if(loggedInUser.getId().equals(workspace.getCreatedBy().getId())){
             workspaceRepository.deleteById(id);
+            logger.info("Workspace deleted successfully for id: {}", id);
             return "Workspace deleted.";
         }else{
+            logger.warn("Unauthorized profile attempting to delete workspace with id: {}", id);
             throw new UnauthorizedException("You are not allowed to delete this workspace");
         }
     }
@@ -104,18 +136,26 @@ public class WorkspaceService {
     //Get All Users of Workspace
     public List<UserResponse> getAllUserOfWorkspace(Long id){
         Workspace workspace =  workspaceRepository.findById(id)
-                .orElseThrow(()->new ResourceNotFoundException("No workspace exist with this id: "+id));
+                .orElseThrow(()->{
+                    logger.warn("Workspace not found for id: {}", id);
+                    return new ResourceNotFoundException("No workspace exist with this id: "+id);
+                });
         List<UserResponse> responses = workspace.getAllocatedUsers()
                 .stream().map(user->userService.toResponse(user)).collect(Collectors.toList());
+        logger.info("Fetching all users of workspace with id: {}", id);
         return responses;
     }
 
     //Get All Task of Workspace
     public List<TaskResponse> getAllTaskOfWorkspace(Long id){
         Workspace workspace =  workspaceRepository.findById(id)
-                .orElseThrow(()->new ResourceNotFoundException("No workspace exist with this id: "+id));
+                .orElseThrow(()->{
+                    logger.warn("Workspace not found for id: {}", id);
+                    return new ResourceNotFoundException("No workspace exist with this id: "+id);
+                });
         List<TaskResponse> responses = workspace.getTasks()
                 .stream().map(task->taskService.toResponse(task)).collect(Collectors.toList());
+        logger.info("Fetching all tasks of workspace with id: {}", id);
         return responses;
     }
 
@@ -174,6 +214,9 @@ public class WorkspaceService {
     }
     public Workspace getWorkspaceEntity(Long id){
         return workspaceRepository.findById(id
-        ).orElseThrow(()->new ResourceNotFoundException("No workspace exist with id: "+id));
+        ).orElseThrow(()->{
+            logger.warn("Workspace not found for id: {}", id);
+            return new ResourceNotFoundException("No workspace exist with id: "+id);
+        });
     }
 }

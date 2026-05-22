@@ -5,12 +5,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
     //This block of code is responsible for handling ValidationException type of exception
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException exception){
@@ -20,7 +22,7 @@ public class GlobalExceptionHandler {
                 .map(error ->
                         error.getField() + ": " + error.getDefaultMessage())
                 .collect(Collectors.joining(", "));
-
+        logger.warn("Validation failed: {}", errors);
         ErrorResponse response = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.BAD_REQUEST.value())
@@ -34,7 +36,7 @@ public class GlobalExceptionHandler {
     //This block of code is responsible for handling ResourceNotFoundException type of exception
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse>handleResourceNotFoundException(ResourceNotFoundException exception){
-
+        logger.warn("Resource not found: {}", exception.getMessage());
         ErrorResponse response = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.NOT_FOUND.value())
@@ -48,6 +50,7 @@ public class GlobalExceptionHandler {
     // This block of code is responsible for handling UnAuthorised Access type of exception
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<ErrorResponse>handleUnAuthorizedException(UnauthorizedException exception){
+        logger.warn("Unauthorized access: {}", exception.getMessage());
         ErrorResponse response = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.FORBIDDEN.value())
@@ -59,9 +62,8 @@ public class GlobalExceptionHandler {
 
     //This block of code is responsible for handling generic type of exception
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGlobalException(
-            Exception ex){
-
+    public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex){
+        logger.error("Unexpected error occurred", ex);
         ErrorResponse response = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
