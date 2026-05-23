@@ -30,23 +30,32 @@ public class TaskController {
     //API for fetching tasks
     @GetMapping("/all")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<TaskResponse>> getAllTask(){
-        List<TaskResponse> responses = service.fetchAllTask();
+    public ResponseEntity<List<TaskResponse>> getAllTask(
+            @RequestParam(defaultValue = "0")int page,
+            @RequestParam(defaultValue = "5")int size
+    ){
+        List<TaskResponse> responses = service.fetchAllTask(page, size);
         return new ResponseEntity<>(responses,HttpStatus.OK);
     }
 
     @GetMapping("/postedTask")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    public ResponseEntity<List<TaskResponse>> getAllTaskPostByUser(){
-        List<TaskResponse> responses = service.getAllPostedTaskByUser();
+    public ResponseEntity<List<TaskResponse>> getAllTaskPostByUser(
+            @RequestParam(defaultValue = "0")int page,
+            @RequestParam(defaultValue = "5")int size
+    ){
+        List<TaskResponse> responses = service.getAllPostedTaskByUser(page, size);
         return new ResponseEntity<>(responses,HttpStatus.OK);
     }
 
     //This API is for to check how many task assigned to us
     @GetMapping("/myTask")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER','MEMBER')")
-    public ResponseEntity<List<TaskResponse>> getAllTaskAssignedToUser(){
-        List<TaskResponse> responses = service.getTaskForUser();
+    public ResponseEntity<List<TaskResponse>> getAllTaskAssignedToUser(
+            @RequestParam(defaultValue = "0")int page,
+            @RequestParam(defaultValue = "5")int size
+    ){
+        List<TaskResponse> responses = service.getTaskForUser(page,size);
         return new ResponseEntity<>(responses,HttpStatus.OK);
     }
 

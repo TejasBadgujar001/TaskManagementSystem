@@ -11,6 +11,9 @@ import com.Tejas.TaskManagementSystem.Repository.WorkspaceRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -91,10 +94,11 @@ public class TaskService {
     }
 
     //Methods for fetching Task
-    public List<TaskResponse> fetchAllTask(){
-        List<TaskEntity> entities = taskRepository.findAll();
+    public List<TaskResponse> fetchAllTask(int page, int size){
+        Pageable pageable= PageRequest.of(page,size);
+        Page<TaskEntity> taskPage = taskRepository.findAll(pageable);
         logger.info("Fetching all tasks");
-        return entities.stream().map(entity -> toResponse(entity)).collect(Collectors.toList());
+        return taskPage.stream().map(entity -> toResponse(entity)).collect(Collectors.toList());
     }
 
     public TaskResponse getTaskById(Long id){
@@ -106,16 +110,18 @@ public class TaskService {
         return toResponse(entity);
     }
 
-    public List<TaskResponse> getTaskForUser(){
+    public List<TaskResponse> getTaskForUser(int page, int size){
+        Pageable pageable= PageRequest.of(page,size);
         UserResponse response = userService.getLoggedInUser();
-        List<TaskEntity> list = taskRepository.findByAssignedUserId(response.getId());
+        Page<TaskEntity> page1 = taskRepository.findByAssignedUserId(response.getId(),pageable);
         logger.info("fetching all task of user with id: {}", response.getId());
-        return list.stream().map(entity -> toResponse(entity)).collect(Collectors.toList());
+        return page1.stream().map(entity -> toResponse(entity)).collect(Collectors.toList());
     }
 
-    public List<TaskResponse> getAllPostedTaskByUser(){
+    public List<TaskResponse> getAllPostedTaskByUser(int page, int size){
+        Pageable pageable= PageRequest.of(page,size);
         UserResponse response = userService.getLoggedInUser();
-        List<TaskEntity> list = taskRepository.findByCreatedById(response.getId());
+        Page<TaskEntity> list = taskRepository.findByCreatedById(response.getId(),pageable);
         logger.info("fetching all task posted by user with id: {}", response.getId());
         return list.stream().map(entity -> toResponse(entity)).collect(Collectors.toList());
     }

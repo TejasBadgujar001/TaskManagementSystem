@@ -10,6 +10,8 @@ import com.Tejas.TaskManagementSystem.Exception.UnauthorizedException;
 import com.Tejas.TaskManagementSystem.Repository.UserRepository;
 import com.Tejas.TaskManagementSystem.Util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -42,11 +45,13 @@ public class UserService {
     }
 
     //Method for getting an user
-    public List<UserResponse> getAllUsers(){
-        List<UserEntity> list = userRepository.findAll();
+    public List<UserResponse> getAllUsers(int page, int size){
+        Pageable pageable = PageRequest.of(page,size);
+        Page<UserEntity> page = userRepository.findAll(pageable);
         logger.info("Fetching all users");
-        return list.stream().map(user->toResponse(user)).collect(Collectors.toList());
+        return page.stream().map(user->toResponse(user)).collect(Collectors.toList());
     }
+
     public  UserResponse getUserById(Long id){
         UserEntity entity = userRepository.findById(id)
                 .orElseThrow(()->{
@@ -56,11 +61,13 @@ public class UserService {
         logger.info("Fetching user with id: {}", id);
         return toResponse(entity);
     }
+
     public  List<UserResponse> getUserByName(String name){
         List<UserEntity> list = userRepository.findByName(name)
                 .orElseThrow(()->new ResourceNotFoundException("User Not Found with name: "+name));
         return list.stream().map(user->toResponse(user)).collect(Collectors.toList());
     }
+
     public  UserResponse getUserByEmail(String email){
         UserEntity entity = userRepository.findByEmail(email)
                 .orElseThrow(()->{

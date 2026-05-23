@@ -45,14 +45,22 @@ public class CommentController {
     //API for fetching all comments for task
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @GetMapping("/task/{id}")
-    public ResponseEntity<List<CommentResponse>> getAllCommentsForTask(@PathVariable Long id){
-        return  new ResponseEntity<>(service.getAllCommentsForTask(id),HttpStatus.OK);
+    public ResponseEntity<List<CommentResponse>> getAllCommentsForTask(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "0")int page,
+            @RequestParam(defaultValue = "5") int size
+    ){
+        return  new ResponseEntity<>(service.getAllCommentsForTask(id,page,size),HttpStatus.OK);
     }
     //API for fetching all comments for user
     @PreAuthorize("hasAnyRole('MEMBER','MANAGER')")
     @GetMapping("/user/{id}")
-    public ResponseEntity<List<CommentResponse>> getAllCommentsForUser(@PathVariable Long id){
-        return  new ResponseEntity<>(service.getAllCommentsForUser(id),HttpStatus.OK);
+    public ResponseEntity<List<CommentResponse>> getAllCommentsForUser(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "0")int page,
+            @RequestParam(defaultValue = "5") int size
+    ){
+        return  new ResponseEntity<>(service.getAllCommentsForUser(id,page,size),HttpStatus.OK);
     }
 
 }

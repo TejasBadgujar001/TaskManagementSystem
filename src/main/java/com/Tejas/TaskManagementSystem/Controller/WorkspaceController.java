@@ -37,8 +37,11 @@ public class WorkspaceController {
     //API For fetching all workspace
     @PreAuthorize(("hasAnyRole('ADMIN','MANAGER')"))
     @GetMapping("/all")
-    public ResponseEntity<List<WorkspaceResponse>> getAllWorkspace(){
-        return new ResponseEntity<>(service.getAllWorkspace(),HttpStatus.OK);
+    public ResponseEntity<List<WorkspaceResponse>> getAllWorkspace(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size
+    ){
+        return new ResponseEntity<>(service.getAllWorkspace(page, size),HttpStatus.OK);
     }
     //API For fetching workspace using Id
     @GetMapping("/id/{id}")

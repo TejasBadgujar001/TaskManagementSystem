@@ -12,6 +12,8 @@ import com.Tejas.TaskManagementSystem.Repository.CommentRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -56,19 +58,21 @@ public class CommentService {
     }
 
     //Get all comment for task
-    public List<CommentResponse> getAllCommentsForTask(Long id){
+    public List<CommentResponse> getAllCommentsForTask(Long id,int page,int size){
+        Pageable pageable = PageRequest.of(page,size);
         TaskResponse response = taskService.getTaskById(id);
         logger.info("Fetching all comments for task with id: {}", id);
-        return commentRepository.findByTaskEntityId(id)
+        return commentRepository.findByTaskEntityId(id,pageable)
                 .stream().map(comment->toResponse(comment))
                 .collect(Collectors.toList());
     }
     //Get all comment done by user
-    public List<CommentResponse> getAllCommentsForUser(Long id){
+    public List<CommentResponse> getAllCommentsForUser(Long id,int page, int size){
+        Pageable pageable = PageRequest.of(page,size);
         UserEntity user = userService.getLoggedInUserEntity();
         if(user.getId().equals(id)){
             logger.info("Fetching all comments done by user for id: {}", id);
-            return commentRepository.findByUserEntityId(id)
+            return commentRepository.findByUserEntityId(id,pageable)
                     .stream().map(comment->toResponse(comment))
                     .collect(Collectors.toList());
         }else {

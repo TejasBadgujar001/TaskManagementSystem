@@ -31,8 +31,11 @@ public class UserController {
     //API for get Users
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/all")
-    public ResponseEntity<List<UserResponse>> getAllUsers(){
-        List<UserResponse> responseList = service.getAllUsers();
+    public ResponseEntity<List<UserResponse>> getAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size
+        ){
+        List<UserResponse> responseList = service.getAllUsers(page,size);
         return new ResponseEntity<>(responseList,HttpStatus.OK);
     }
 
