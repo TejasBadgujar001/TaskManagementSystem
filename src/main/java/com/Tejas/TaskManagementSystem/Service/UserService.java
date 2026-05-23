@@ -3,6 +3,7 @@ package com.Tejas.TaskManagementSystem.Service;
 import com.Tejas.TaskManagementSystem.DTO.AuthDto;
 import com.Tejas.TaskManagementSystem.DTO.UserRequest;
 import com.Tejas.TaskManagementSystem.DTO.UserResponse;
+import com.Tejas.TaskManagementSystem.DTO.UserUpdateRequest;
 import com.Tejas.TaskManagementSystem.Entity.UserEntity;
 import com.Tejas.TaskManagementSystem.Exception.ResourceNotFoundException;
 import com.Tejas.TaskManagementSystem.Exception.UnauthorizedException;
@@ -50,7 +51,7 @@ public class UserService {
         UserEntity entity = userRepository.findById(id)
                 .orElseThrow(()->{
                     logger.warn("User not found with id: {}", id);
-                    return new ResourceNotFoundException("User Not Found with id"+id);
+                    return new ResourceNotFoundException("User Not Found with id: {}"+id);
                 });
         logger.info("Fetching user with id: {}", id);
         return toResponse(entity);
@@ -105,7 +106,7 @@ public class UserService {
     }
 
     //Update User Profile
-    public UserResponse updateUser(Long id,UserRequest request){
+    public UserResponse updateUser(Long id, UserUpdateRequest request){
         logger.info("Attempting to update user profile with id: {}", id);
         if(id.equals(getLoggedInUser().getId())) {
             UserEntity entity = userRepository.findById(id)
@@ -113,9 +114,15 @@ public class UserService {
                         logger.warn("User not found with email: {}", id);
                         return new ResourceNotFoundException("User Not Found with id:  "+id);
                     });
-            entity.setName(request.getName());
-            entity.setRole(request.getRole());
-            entity.setPassword(passwordEncoder.encode(request.getPassword()));
+            if (request.getName() != null) {
+                entity.setName(request.getName());
+            }
+            if (request.getRole() != null) {
+                entity.setRole(request.getRole());
+            }
+            if (request.getPassword() != null && !request.getPassword().trim().isEmpty()) {
+                entity.setPassword(passwordEncoder.encode(request.getPassword()));
+            }
             userRepository.save(entity);
             logger.info("User profile updated successfully for id: {}", id);
             return toResponse(entity);

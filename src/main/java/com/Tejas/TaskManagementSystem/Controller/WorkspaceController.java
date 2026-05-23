@@ -1,9 +1,6 @@
 package com.Tejas.TaskManagementSystem.Controller;
 
-import com.Tejas.TaskManagementSystem.DTO.TaskResponse;
-import com.Tejas.TaskManagementSystem.DTO.UserResponse;
-import com.Tejas.TaskManagementSystem.DTO.WorkspaceRequest;
-import com.Tejas.TaskManagementSystem.DTO.WorkspaceResponse;
+import com.Tejas.TaskManagementSystem.DTO.*;
 import com.Tejas.TaskManagementSystem.Service.WorkspaceService;
 import jakarta.validation.Valid;
 import lombok.Data;
@@ -57,9 +54,9 @@ public class WorkspaceController {
     }
 
     //API for update the workspace
-    @PutMapping("/update/{id}")
+    @PatchMapping("/update/{id}")
     @PreAuthorize(("hasAnyRole('ADMIN','MANAGER')"))
-    public ResponseEntity<WorkspaceResponse> updateWorkspace(@PathVariable Long id,@Valid @RequestBody WorkspaceRequest request){
+    public ResponseEntity<WorkspaceResponse> updateWorkspace(@PathVariable Long id,@Valid @RequestBody WorkspaceUpdateRequest request){
         return new ResponseEntity<>(service.updateWorkspace(id,request),HttpStatus.OK);
     }
 

@@ -2,6 +2,7 @@ package com.Tejas.TaskManagementSystem.Controller;
 
 import com.Tejas.TaskManagementSystem.DTO.TaskRequest;
 import com.Tejas.TaskManagementSystem.DTO.TaskResponse;
+import com.Tejas.TaskManagementSystem.DTO.TaskUpdateRequest;
 import com.Tejas.TaskManagementSystem.Service.TaskService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,7 @@ public class TaskController {
     }
 
     //API for fetching tasks
-    @GetMapping
+    @GetMapping("/all")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<TaskResponse>> getAllTask(){
         List<TaskResponse> responses = service.fetchAllTask();
@@ -56,9 +57,9 @@ public class TaskController {
         return new ResponseEntity<>(response,HttpStatus.OK);
     }
     //API for update task
-    @PutMapping("/update/{id}")
+    @PatchMapping("/update/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    public ResponseEntity<TaskResponse> updateTask(@PathVariable Long id,@Valid @RequestBody TaskRequest request){
+    public ResponseEntity<TaskResponse> updateTask(@PathVariable Long id,@Valid @RequestBody TaskUpdateRequest request){
         TaskResponse response = service.updateTask(id,request);
         return new ResponseEntity<>(response,HttpStatus.OK);
     }

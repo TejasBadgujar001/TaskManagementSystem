@@ -3,6 +3,7 @@ package com.Tejas.TaskManagementSystem.Controller;
 import com.Tejas.TaskManagementSystem.DTO.AuthDto;
 import com.Tejas.TaskManagementSystem.DTO.UserRequest;
 import com.Tejas.TaskManagementSystem.DTO.UserResponse;
+import com.Tejas.TaskManagementSystem.DTO.UserUpdateRequest;
 import com.Tejas.TaskManagementSystem.Service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -58,8 +59,8 @@ public class UserController {
 
     //API for update user profile
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER','MEMBER')")
-    @PutMapping("/update/{id}")
-    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id,@Valid @RequestBody UserRequest request){
+    @PatchMapping("/update/{id}")
+    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id,@Valid @RequestBody UserUpdateRequest request){
         UserResponse response = service.updateUser(id,request);
         return new  ResponseEntity<>(response,HttpStatus.OK);
     }

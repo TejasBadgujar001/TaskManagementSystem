@@ -1,9 +1,6 @@
 package com.Tejas.TaskManagementSystem.Service;
 
-import com.Tejas.TaskManagementSystem.DTO.TaskResponse;
-import com.Tejas.TaskManagementSystem.DTO.UserResponse;
-import com.Tejas.TaskManagementSystem.DTO.WorkspaceRequest;
-import com.Tejas.TaskManagementSystem.DTO.WorkspaceResponse;
+import com.Tejas.TaskManagementSystem.DTO.*;
 import com.Tejas.TaskManagementSystem.Entity.UserEntity;
 import com.Tejas.TaskManagementSystem.Entity.Workspace;
 import com.Tejas.TaskManagementSystem.Exception.ResourceNotFoundException;
@@ -91,7 +88,7 @@ public class WorkspaceService {
     }
 
     //Update Workspace
-    public WorkspaceResponse updateWorkspace(Long id, WorkspaceRequest request){
+    public WorkspaceResponse updateWorkspace(Long id, WorkspaceUpdateRequest request){
         logger.info("Attempting to update workspace for id: {}",id);
         UserResponse loggedInUser = userService.getLoggedInUser();
         Workspace workspace = workspaceRepository.findById(id)

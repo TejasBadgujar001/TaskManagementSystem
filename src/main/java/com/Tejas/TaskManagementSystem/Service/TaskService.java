@@ -1,9 +1,6 @@
 package com.Tejas.TaskManagementSystem.Service;
 
-import com.Tejas.TaskManagementSystem.DTO.TaskRequest;
-import com.Tejas.TaskManagementSystem.DTO.TaskResponse;
-import com.Tejas.TaskManagementSystem.DTO.UserResponse;
-import com.Tejas.TaskManagementSystem.DTO.WorkspaceResponse;
+import com.Tejas.TaskManagementSystem.DTO.*;
 import com.Tejas.TaskManagementSystem.Entity.TaskEntity;
 import com.Tejas.TaskManagementSystem.Entity.UserEntity;
 import com.Tejas.TaskManagementSystem.Entity.Workspace;
@@ -48,7 +45,7 @@ public class TaskService {
     }
 
     //Update Task
-    public TaskResponse updateTask(Long id, TaskRequest request){
+    public TaskResponse updateTask(Long id, TaskUpdateRequest request){
         logger.info("Attempting to update task with id: {}", id);
         UserResponse response = userService.getLoggedInUser();
         TaskEntity entity = taskRepository.findById(id)
@@ -56,13 +53,34 @@ public class TaskService {
                     logger.warn("Task not found with id: {}", id);
                     return new ResourceNotFoundException("Task not found with id: "+id);
                 });
-        UserEntity assignedUser = userService.getUserEntity(request.getAssignedUser());
         if(entity.getCreatedBy().getId().equals(response.getId())) {
-            entity.setTitle(request.getTitle());
-            entity.setPriority(request.getPriority());
-            entity.setDescription(request.getDescription());
-            entity.setDueDate(request.getDueDate());
-            entity.setAssignedUser(assignedUser);
+            if (request.getTitle() != null) {
+                entity.setTitle(request.getTitle());
+            }
+            if (request.getDescription() != null) {
+                entity.setDescription(request.getDescription());
+            }
+            if (request.getPriority() != null) {
+                entity.setPriority(request.getPriority());
+            }
+            if (request.getStatus() !=null){
+                entity.setStatus(request.getStatus());
+            }
+            if (request.getDueDate() != null) {
+                entity.setDueDate(request.getDueDate());
+            }
+            if (request.getAssignedUser() != null) {
+                UserEntity assignedUser = userService.getUserEntity(request.getAssignedUser());
+                entity.setAssignedUser(assignedUser);
+            }
+            if (request.getWorkspace() != null) {
+                Workspace workspace = workspaceRepository.findById(request.getWorkspace()
+                ).orElseThrow(() -> {
+                    logger.warn("Workspace not found with id: {}", request.getWorkspace());
+                    return new ResourceNotFoundException("Workspace not found for id: " + request.getWorkspace());
+                });
+                entity.setWorkspace(workspace);
+            }
             taskRepository.save(entity);
             logger.info("Task updated successfully for id: {}", id);
             return toResponse(entity);
