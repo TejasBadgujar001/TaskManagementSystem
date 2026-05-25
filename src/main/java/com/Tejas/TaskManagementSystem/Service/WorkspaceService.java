@@ -22,6 +22,7 @@ public class WorkspaceService {
     private final WorkspaceRepository workspaceRepository;
     private final UserService userService;
     private final TaskService taskService;
+    private final EmailService emailService;
     private static final Logger logger = LoggerFactory.getLogger(WorkspaceService.class);
 
     //Create Workspace
@@ -51,6 +52,30 @@ public class WorkspaceService {
             }
             workspace = workspaceRepository.save(workspace);
             logger.info("User with ids {} are added to workspace with id: {}",ids,id);
+            for(UserEntity user : userEntities){
+                String subject = "You have been added to a workspace ";
+                String body = """
+                    Hello %s,
+                    
+                    You have been added to the workspace:
+                    Workspace Name: %s
+                    Description: %s
+                    Added By: %s
+                    
+                    You can now collaborate, manage tasks, and track progress inside the workspace.
+                    Stay productive
+                    
+                    Regards,
+                    Task Management System
+                    """
+                        .formatted(
+                                user.getName(),
+                                workspace.getName(),
+                                workspace.getDescription(),
+                                workspace.getCreatedBy().getName()
+                        );
+                emailService.sendEmail(user.getEmail(), subject, body);
+            }
             return toResponse(workspace);
         }else{
             logger.warn("Unauthorized profile attempting to add users to workspace with id: {}", id);

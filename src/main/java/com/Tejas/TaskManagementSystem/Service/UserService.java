@@ -34,6 +34,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;// this will be injected from the securityConfig
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
+    private final EmailService emailService;
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     //Method for Adding new user
@@ -42,6 +43,29 @@ public class UserService {
         logger.info("Registering new user with email: {}", request.getEmail());
         entity = userRepository.save(entity);
         logger.info("User registered successfully with id: {}", entity.getId());
+        String subject ="Welcome to Task Management System \uD83C\uDF89";
+        String body ="""
+            Hello %s,
+    
+            Welcome to Task Management System! 🎉
+    
+            Your account has been created successfully, and you're now ready to organize tasks, collaborate with your team, and manage work more efficiently.
+            
+            With Task Management System, you can:
+            • Create and manage tasks
+            • Collaborate within workspaces
+            • Track task progress
+            • Assign tasks to team members
+            • Stay productive and organized
+            
+            We're excited to have you onboard.
+            Happy Productivity 
+            
+            Best Regards,
+            Task Management System Team
+            """.formatted(request.getName());
+        String to = request.getEmail();
+        emailService.sendEmail(to,subject,body);
         return toResponse(entity);
     }
 

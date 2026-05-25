@@ -4,6 +4,7 @@ import com.Tejas.TaskManagementSystem.DTO.*;
 import com.Tejas.TaskManagementSystem.Entity.TaskEntity;
 import com.Tejas.TaskManagementSystem.Entity.UserEntity;
 import com.Tejas.TaskManagementSystem.Entity.Workspace;
+import com.Tejas.TaskManagementSystem.Enum.Status;
 import com.Tejas.TaskManagementSystem.Exception.ResourceNotFoundException;
 import com.Tejas.TaskManagementSystem.Exception.UnauthorizedException;
 import com.Tejas.TaskManagementSystem.Repository.TaskRepository;
@@ -25,6 +26,7 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final UserService userService;
     private final WorkspaceRepository workspaceRepository;
+    private final EmailService emailService;
     private static final Logger logger = LoggerFactory.getLogger(TaskService.class);
 
     //Post Task
@@ -41,6 +43,36 @@ public class TaskService {
             if(workspace.getAllocatedUsers().contains(userService.getUserEntity(request.getAssignedUser()))){
                 entity = taskRepository.save(entity);
                 logger.info( "Task with id: {} is added successfully in workspace with id: {}",entity.getId(),request.getWorkspace());
+                String subject = "New Task Assigned To You ";
+                String body = """
+                    Hello %s,
+            
+                    A new task has been assigned to you in the Task Management System.
+            
+                    Task Details:
+                    • Title: %s
+                    • Description: %s
+                    • Priority: %s
+                    • Due Date: %s
+                    • Workspace: %s
+                    Assigned By:
+                    • %s
+            
+                    Please review the task and start working on it before the deadline.
+                    Stay focused and productive.
+            
+                    Best Regards,
+                    Task Management System Team
+                    """.formatted(
+                                    entity.getAssignedUser().getName(),
+                                    entity.getTitle(),
+                                    entity.getDescription(),
+                                    entity.getPriority(),
+                                    entity.getDueDate(),
+                                    workspace.getName(),
+                                    user.getName()
+                            );
+                emailService.sendEmail(entity.getAssignedUser().getEmail(),subject,body);
                 return toResponse(entity);
             }else {
                 throw new RuntimeException("user with id: "+ request.getAssignedUser()+" is not the part of workspace with id: "+workspace.getId());
@@ -55,13 +87,18 @@ public class TaskService {
     //Update Task
     public TaskResponse updateTask(Long id, TaskUpdateRequest request){
         logger.info("Attempting to update task with id: {}", id);
-        UserResponse response = userService.getLoggedInUser();
+        UserResponse loggedInUser = userService.getLoggedInUser();
         TaskEntity entity = taskRepository.findById(id)
                 .orElseThrow(()->{
                     logger.warn("Task not found with id: {}", id);
                     return new ResourceNotFoundException("Task not found with id: "+id);
                 });
-        if(entity.getCreatedBy().getId().equals(response.getId())) {
+        Status oldStatus = entity.getStatus();
+        Long loggedInUserId = loggedInUser.getId();
+        Long creatorId = entity.getCreatedBy().getId();
+        Long assignedUserId = entity.getAssignedUser().getId();
+        if(creatorId.equals(loggedInUserId)) {
+            //Task creator can ONLY update any feild of task
             if (request.getTitle() != null) {
                 entity.setTitle(request.getTitle());
             }
@@ -71,7 +108,7 @@ public class TaskService {
             if (request.getPriority() != null) {
                 entity.setPriority(request.getPriority());
             }
-            if (request.getStatus() !=null){
+            if(request.getStatus() !=null){
                 entity.setStatus(request.getStatus());
             }
             if (request.getDueDate() != null) {
@@ -91,10 +128,26 @@ public class TaskService {
             }
             taskRepository.save(entity);
             logger.info("Task updated successfully for id: {}", id);
+            if(request.getStatus() != null && !oldStatus.equals(request.getStatus())) {
+                sendTaskStatusUpdateNotification(entity,oldStatus,loggedInUser);
+            }
             return toResponse(entity);
+        }else if (assignedUserId.equals(loggedInUserId)) {
+            // assigned user can ONLY update status
+            if (request.getStatus() != null) {
+                entity.setStatus(request.getStatus());
+                taskRepository.save(entity);
+                logger.info("Task status updated successfully for id: {}", id);
+                if(request.getStatus() != null && !oldStatus.equals(request.getStatus())) {
+                    sendTaskStatusUpdateNotification(entity,oldStatus,loggedInUser);
+                }
+                return toResponse(entity);
+            } else {
+                throw new UnauthorizedException("You can only update task status");
+            }
         }else{
             logger.warn("Unauthorized profile attempting to update task with id {}:", id);
-            throw new UnauthorizedException("You are not allowed to update task with id: "+id);
+            throw  new UnauthorizedException("You are not allowed to update task with id: "+id);
         }
     }
 
@@ -199,5 +252,52 @@ public class TaskService {
                     logger.warn("Task not found for id{}:",id);
                     return new ResourceNotFoundException("No task exist with id: {}"+id);
                 });
+    }
+    private void sendTaskStatusUpdateNotification(TaskEntity entity, Status oldStatus, UserResponse updatedBy){
+        String subject = "Task Status Updated";
+        String body = """
+            Hello %s,
+
+            The status of a task has been updated.
+
+            Task Details:
+            • Title: %s
+            • Previous Status: %s
+            • Current Status: %s
+            • Workspace: %s
+            Updated By:
+            • %s
+
+            Stay productive 
+
+            Best Regards,
+            Task Management System Team
+            """;
+        // EMAIL TO TASK CREATOR
+        emailService.sendEmail(
+                entity.getCreatedBy().getEmail(),
+                subject,
+                body.formatted(
+                        entity.getCreatedBy().getName(),
+                        entity.getTitle(),
+                        oldStatus,
+                        entity.getStatus(),
+                        entity.getWorkspace().getName(),
+                        updatedBy.getName()
+                )
+        );
+        // EMAIL TO ASSIGNED USER
+        emailService.sendEmail(
+                entity.getAssignedUser().getEmail(),
+                subject,
+                body.formatted(
+                        entity.getAssignedUser().getName(),
+                        entity.getTitle(),
+                        oldStatus,
+                        entity.getStatus(),
+                        entity.getWorkspace().getName(),
+                        updatedBy.getName()
+                )
+        );
     }
 }
