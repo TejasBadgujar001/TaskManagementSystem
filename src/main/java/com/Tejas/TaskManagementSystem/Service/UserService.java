@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Map;
@@ -47,9 +48,9 @@ public class UserService {
     //Method for getting an user
     public List<UserResponse> getAllUsers(int page, int size){
         Pageable pageable = PageRequest.of(page,size);
-        Page<UserEntity> page = userRepository.findAll(pageable);
+        Page<UserEntity> page1 = userRepository.findAll(pageable);
         logger.info("Fetching all users");
-        return page.stream().map(user->toResponse(user)).collect(Collectors.toList());
+        return page1.stream().map(user->toResponse(user)).collect(Collectors.toList());
     }
 
     public  UserResponse getUserById(Long id){

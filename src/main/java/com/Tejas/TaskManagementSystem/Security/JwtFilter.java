@@ -29,7 +29,7 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
         String path = request.getServletPath();
-        if(path.equals("/user/signup") || path.equals("/user/login")){
+        if(path.equals("/user/signup") || path.equals("/user/login") ||path.equals("/swagger-ui.html")||path.equals("/v3/api-docs/**")||path.equals("/swagger-ui/**")){
             logger.info("Public endpoint accessed: {}", path);
             filterChain.doFilter(request,response);
             return;

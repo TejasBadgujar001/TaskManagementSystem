@@ -36,11 +36,16 @@ public class TaskService {
                     logger.warn("Workspace not found with id: {}", request.getWorkspace());
                     return new ResourceNotFoundException("No Workspace found with this id: "+request.getWorkspace());
                 });
+        TaskEntity entity = toEntity(request);
         if(user.getId().equals(workspace.getCreatedBy().getId())) {
-            TaskEntity entity = toEntity(request);
-            entity = taskRepository.save(entity);
-            logger.info( "Task with id: {} is added successfully in workspace with id: {}",entity.getId(),request.getWorkspace());
-            return toResponse(entity);
+            if(workspace.getAllocatedUsers().contains(userService.getUserEntity(request.getAssignedUser()))){
+                entity = taskRepository.save(entity);
+                logger.info( "Task with id: {} is added successfully in workspace with id: {}",entity.getId(),request.getWorkspace());
+                return toResponse(entity);
+            }else {
+                throw new RuntimeException("user with id: "+ request.getAssignedUser()+" is not the part of workspace with id: "+workspace.getId());
+            }
+
         }else {
             logger.warn("Unauthorized Profile attempt to add task in workspace with id: {}", request.getWorkspace());
             throw new UnauthorizedException("You are not allowed to add task in this Workspace: "+workspace.getName());
