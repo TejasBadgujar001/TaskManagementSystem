@@ -5,6 +5,7 @@ import com.Tejas.TaskManagementSystem.DTO.UserRequest;
 import com.Tejas.TaskManagementSystem.DTO.UserResponse;
 import com.Tejas.TaskManagementSystem.DTO.UserUpdateRequest;
 import com.Tejas.TaskManagementSystem.Entity.UserEntity;
+import com.Tejas.TaskManagementSystem.Enum.Role;
 import com.Tejas.TaskManagementSystem.Exception.ResourceNotFoundException;
 import com.Tejas.TaskManagementSystem.Exception.UnauthorizedException;
 import com.Tejas.TaskManagementSystem.Repository.UserRepository;
@@ -27,19 +28,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Handles user management, authentication,
+ * profile operations and JWT token generation.
+ */
 @Service
 @RequiredArgsConstructor
 public class UserService {
-    private final UserRepository userRepository; // this will be injected by Spring Container
-    private final PasswordEncoder passwordEncoder;// this will be injected from the securityConfig
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final EmailService emailService;
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
-    //Method for Adding new user
     public UserResponse registerUser(UserRequest request){
-        UserEntity entity = toEntity(request);
+        UserEntity entity = mapToEntity(request);
+        if(userRepository.existsByEmail(request.getEmail())){
+            throw new IllegalArgumentException(
+                    "Email already registered"
+            );
+        }
         logger.info("Registering new user with email: {}", request.getEmail());
         entity = userRepository.save(entity);
         logger.info("User registered successfully with id: {}", entity.getId());
@@ -66,15 +75,14 @@ public class UserService {
             """.formatted(request.getName());
         String to = request.getEmail();
         emailService.sendEmail(to,subject,body);
-        return toResponse(entity);
+        return mapToResponse(entity);
     }
 
-    //Method for getting an user
     public List<UserResponse> getAllUsers(int page, int size){
         Pageable pageable = PageRequest.of(page,size);
         Page<UserEntity> page1 = userRepository.findAll(pageable);
         logger.info("Fetching all users");
-        return page1.stream().map(user->toResponse(user)).collect(Collectors.toList());
+        return page1.stream().map(user-> mapToResponse(user)).collect(Collectors.toList());
     }
 
     public  UserResponse getUserById(Long id){
@@ -84,13 +92,13 @@ public class UserService {
                     return new ResourceNotFoundException("User Not Found with id: {}"+id);
                 });
         logger.info("Fetching user with id: {}", id);
-        return toResponse(entity);
+        return mapToResponse(entity);
     }
 
     public  List<UserResponse> getUserByName(String name){
         List<UserEntity> list = userRepository.findByName(name)
                 .orElseThrow(()->new ResourceNotFoundException("User Not Found with name: "+name));
-        return list.stream().map(user->toResponse(user)).collect(Collectors.toList());
+        return list.stream().map(user-> mapToResponse(user)).collect(Collectors.toList());
     }
 
     public  UserResponse getUserByEmail(String email){
@@ -100,20 +108,19 @@ public class UserService {
                     return new ResourceNotFoundException("User Not Found with email: "+email);
                 });
         logger.info("Fetching user with email: {}", email);
-        return toResponse(entity);
+        return mapToResponse(entity);
     }
 
-    //Get Current Logged In User
     public UserResponse getLoggedInUser(){
         Authentication authentication =SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
         UserEntity entity= userRepository.findByEmail(email)
                 .orElseThrow(()->{
                     logger.error("Authenticated user not found in database");
-                    return new RuntimeException("User Not Logged In");
+                    return new UnauthorizedException("User Not Logged In");
                 });
         logger.info("Fetching currently logged in user");
-        return toResponse(entity);
+        return mapToResponse(entity);
     }
     public UserEntity getLoggedInUserEntity(){
         Authentication authentication = (Authentication) SecurityContextHolder.getContext().getAuthentication();
@@ -130,14 +137,13 @@ public class UserService {
     public UserResponse getUserPublicProfile(String email){
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(()->new ResourceNotFoundException("No user with email id :"+email));
-        return toResponse(user);
+        return mapToResponse(user);
     }
-    //this method user in workspace Service to add users for workspace
+
     public List<UserEntity> getAllUserByIds(List<Long>ids){
          return userRepository.findAllById(ids);
     }
 
-    //Update User Profile
     public UserResponse updateUser(Long id, UserUpdateRequest request){
         logger.info("Attempting to update user profile with id: {}", id);
         if(id.equals(getLoggedInUser().getId())) {
@@ -149,15 +155,21 @@ public class UserService {
             if (request.getName() != null) {
                 entity.setName(request.getName());
             }
-            if (request.getRole() != null) {
-                entity.setRole(request.getRole());
+            if(request.getRole() != null){
+                if(getLoggedInUser().getRole() == Role.ADMIN){
+                    entity.setRole(request.getRole());
+                }else{
+                    throw new UnauthorizedException(
+                            "Only admin can change roles"
+                    );
+                }
             }
             if (request.getPassword() != null && !request.getPassword().trim().isEmpty()) {
                 entity.setPassword(passwordEncoder.encode(request.getPassword()));
             }
             userRepository.save(entity);
             logger.info("User profile updated successfully for id: {}", id);
-            return toResponse(entity);
+            return mapToResponse(entity);
         }else{
             logger.warn("Unauthorized profile update attempt for user id: {}", id);
             throw new UnauthorizedException("You cannot update another user's profile");
@@ -187,8 +199,7 @@ public class UserService {
         return "User Deleted Successfully";
     }
 
-    //Helper methods
-    public UserEntity toEntity(UserRequest request){
+    public UserEntity mapToEntity(UserRequest request){
         return UserEntity.builder()
                 .name(request.getName())
                 .email(request.getEmail())
@@ -197,7 +208,7 @@ public class UserService {
                 .build();
     }
 
-    public UserResponse toResponse(UserEntity entity){
+    public UserResponse mapToResponse(UserEntity entity){
         return UserResponse.builder()
                 .id(entity.getId())
                 .name(entity.getName())

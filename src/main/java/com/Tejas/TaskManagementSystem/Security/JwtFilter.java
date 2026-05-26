@@ -19,6 +19,14 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+/**
+ * This JWT authentication filter responsible for:
+    - Extracting JWT tokens from incoming requests
+    - Validating tokens
+    - Authenticating users in SecurityContext
+    -This filter runs once per request before
+    -protected resources are accessed.
+ */
 @Component
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
@@ -28,8 +36,14 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
+        // Skip JWT validation for public authentication and Swagger endpoints
         String path = request.getServletPath();
-        if(path.equals("/user/signup") || path.equals("/user/login") ||path.equals("/swagger-ui.html")||path.equals("/v3/api-docs/**")||path.equals("/swagger-ui/**")){
+        if(path.equals("/user/signup")
+                || path.equals("/user/login")
+                ||path.equals("/swagger-ui.html")
+                ||path.startsWith("/v3/api-docs/")
+                ||path.startsWith("/swagger-ui/")
+        ){
             logger.info("Public endpoint accessed: {}", path);
             filterChain.doFilter(request,response);
             return;
@@ -48,6 +62,7 @@ public class JwtFilter extends OncePerRequestFilter {
             logger.warn("Authorization header missing or invalid");
         }
 
+        // Authenticate user only if SecurityContext is empty
         if(email != null && SecurityContextHolder.getContext().getAuthentication()==null){
             UserDetails userDetails = applicationContext.getBean(CustomUserDetailsService.class).loadUserByUsername(email);
             if(jwtUtil.validateToken(token,userDetails)){

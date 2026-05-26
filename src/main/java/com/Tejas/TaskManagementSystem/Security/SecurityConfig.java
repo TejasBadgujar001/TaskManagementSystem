@@ -16,6 +16,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+/**
+ * Configures Spring Security for JWT-based authentication.
+ * Defines:
+    - Public and protected endpoints
+    - Stateless session management
+    - Authentication provider
+    - JWT filter integration
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -28,9 +36,13 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http.csrf(csrf->csrf.disable())
                 .authorizeHttpRequests(auth->
-                        auth.requestMatchers("/user/login","/user/signup","/swagger-ui/**","/v3/api-docs/**","/swagger-ui.html").permitAll()
+                        // Public endpoints accessible without authentication
+                        auth.requestMatchers("/user/login","/user/signup","/swagger-ui/**",
+                                        "/v3/api-docs/**","/swagger-ui.html").permitAll()
                         .anyRequest().authenticated())
-                .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                        // Add JWT filter before Spring Security authentication filter
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

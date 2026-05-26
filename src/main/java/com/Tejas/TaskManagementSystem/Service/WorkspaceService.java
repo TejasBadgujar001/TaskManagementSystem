@@ -16,6 +16,15 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Service layer responsible for managing workspaces.
+ * This service handles:
+     - Workspace creation and updates
+     - Adding users to workspaces
+     - Fetching workspace details, users, and tasks
+     - Workspace deletion
+     -It also ensures that only the workspace creator can modify or manage the workspace.
+ */
 @Service
 @RequiredArgsConstructor
 public class WorkspaceService {
@@ -25,16 +34,14 @@ public class WorkspaceService {
     private final EmailService emailService;
     private static final Logger logger = LoggerFactory.getLogger(WorkspaceService.class);
 
-    //Create Workspace
     public WorkspaceResponse createWorkspace(WorkspaceRequest request){
         logger.info("Creating workspace with name : {}", request.getName());
-        Workspace entity = toEntity(request);
+        Workspace entity = mapToEntity(request);
         entity = workspaceRepository.save(entity);
         logger.info("Created workspace successfully with name : {}", request.getName());
-        return toResponse(entity);
+        return mapToResponse(entity);
     }
 
-    //Add Users to Workspace
     public WorkspaceResponse addUserToWorkspace(Long id, List<Long> ids){
         UserResponse response = userService.getLoggedInUser();
         logger.info("Attempting to add users in workspace with id: {}",id);
@@ -76,24 +83,22 @@ public class WorkspaceService {
                         );
                 emailService.sendEmail(user.getEmail(), subject, body);
             }
-            return toResponse(workspace);
+            return mapToResponse(workspace);
         }else{
             logger.warn("Unauthorized profile attempting to add users to workspace with id: {}", id);
             throw new UnauthorizedException("You are not allowed to add users to workspace with id: "+id);
         }
     }
 
-    //GetAllWorkspace
     public List<WorkspaceResponse> getAllWorkspace(int page, int size){
         Pageable pageable = PageRequest.of(page,size);
         logger.info("Fetching all workspaces");
          List<WorkspaceResponse> responses = workspaceRepository.findAll(pageable)
-                 .stream().map(workspace -> toResponse(workspace))
+                 .stream().map(workspace -> mapToResponse(workspace))
                  .collect(Collectors.toList());
          return responses;
     }
 
-    //GetWorkspaceById
     public WorkspaceResponse getWorkspaceById(Long id){
         logger.info("Fetching workspace for id: {}", id);
         Workspace entity = workspaceRepository.findById(id)
@@ -101,10 +106,9 @@ public class WorkspaceService {
                     logger.warn("Workspace not found for id: {}",id);
                     return new ResourceNotFoundException("No Workspace found with this id "+id);
                 });
-        return toResponse(entity);
+        return mapToResponse(entity);
     }
 
-    //GetWorkspaceByName
     public WorkspaceResponse getWorkspaceByName(String  name){
         logger.info("Fetching workspace for name: {}", name);
         Workspace entity = workspaceRepository.findByName(name)
@@ -112,10 +116,9 @@ public class WorkspaceService {
                     logger.warn("Workspace not found for name: {}",name);
                     return new ResourceNotFoundException("No Workspace with name: "+name);
                 });
-        return toResponse(entity);
+        return mapToResponse(entity);
     }
 
-    //Update Workspace
     public WorkspaceResponse updateWorkspace(Long id, WorkspaceUpdateRequest request){
         logger.info("Attempting to update workspace for id: {}",id);
         UserResponse loggedInUser = userService.getLoggedInUser();
@@ -133,13 +136,13 @@ public class WorkspaceService {
             }
             workspaceRepository.save(workspace);
             logger.info("Workspace Updated successfully for id: {}", id);
-            return toResponse(workspace);
+            return mapToResponse(workspace);
         }else{
             logger.warn("Unauthorized profile attempting to update workspace with id: {}", id);
             throw new UnauthorizedException("You are not allowed to update workspace with id: "+id);
         }
     }
-    //Delete Workspace
+
     public String deleteWorkspace(Long id){
         logger.info("Attempting to delete  workspace for id: {}",id);
         UserResponse loggedInUser = userService.getLoggedInUser();
@@ -158,7 +161,6 @@ public class WorkspaceService {
         }
     }
 
-    //Get All Users of Workspace
     public List<UserResponse> getAllUserOfWorkspace(Long id){
         Workspace workspace =  workspaceRepository.findById(id)
                 .orElseThrow(()->{
@@ -166,12 +168,11 @@ public class WorkspaceService {
                     return new ResourceNotFoundException("No workspace exist with this id: "+id);
                 });
         List<UserResponse> responses = workspace.getAllocatedUsers()
-                .stream().map(user->userService.toResponse(user)).collect(Collectors.toList());
+                .stream().map(user->userService.mapToResponse(user)).collect(Collectors.toList());
         logger.info("Fetching all users of workspace with id: {}", id);
         return responses;
     }
 
-    //Get All Task of Workspace
     public List<TaskResponse> getAllTaskOfWorkspace(Long id){
         Workspace workspace =  workspaceRepository.findById(id)
                 .orElseThrow(()->{
@@ -179,13 +180,12 @@ public class WorkspaceService {
                     return new ResourceNotFoundException("No workspace exist with this id: "+id);
                 });
         List<TaskResponse> responses = workspace.getTasks()
-                .stream().map(task->taskService.toResponse(task)).collect(Collectors.toList());
+                .stream().map(task->taskService.mapToResponse(task)).collect(Collectors.toList());
         logger.info("Fetching all tasks of workspace with id: {}", id);
         return responses;
     }
 
-    //Helper method
-    public Workspace toEntity(WorkspaceRequest request){
+    public Workspace mapToEntity(WorkspaceRequest request){
         return Workspace.builder()
                 .name(request.getName())
                 .description(request.getDescription())
@@ -193,7 +193,7 @@ public class WorkspaceService {
                 .build();
     }
 
-    public WorkspaceResponse toResponse(Workspace entity){
+    public WorkspaceResponse mapToResponse(Workspace entity){
         UserResponse response = UserResponse.builder()
                 .name(entity.getCreatedBy().getName())
                 .email(entity.getCreatedBy().getEmail())

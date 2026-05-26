@@ -13,8 +13,18 @@ import java.util.Map;
 import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-//JWT has three main parts - Header, Signature, Payload
-//Claims - information stored in Payload - {"sub":"tejas", "role":"MEMBER", "expiration":"1712345678"} Claims is basically like a map:
+/**
+ * Utility service responsible for generating, validating,
+ * and extracting information from JWT tokens.
+ * This class handles:
+    - JWT token generation
+    - Token validation
+    - Extracting claims like username and expiration
+    - Checking token expiration
+    - Creating secure signing keys
+ * Used for authentication and authorization
+ * in the application security flow.
+ */
 @Service
 public class JwtUtil {
 

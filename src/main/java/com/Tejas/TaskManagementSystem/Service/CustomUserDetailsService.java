@@ -16,7 +16,10 @@ import org.springframework.stereotype.Service;
 import java.util.Collection;
 import java.util.Collections;
 
-
+/**
+ * Custom implementation of Spring Security's UserDetailsService.
+ * Responsible for loading user credentials and roles during authentication.
+ */
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {

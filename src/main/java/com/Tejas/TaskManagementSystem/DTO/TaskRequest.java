@@ -26,7 +26,7 @@ public class TaskRequest {
     @Future(message = "Due date must be in the future")
     private LocalDate dueDate;
     @NotNull(message = "Assigned user must be there")
-    private Long assignedUser;
+    private Long assignedUserId;
     @NotNull(message = "Workspace can't be null")
-    private Long workspace;
+    private Long workspaceId;
 }

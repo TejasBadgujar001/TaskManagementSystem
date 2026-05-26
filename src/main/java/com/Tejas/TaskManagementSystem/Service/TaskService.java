@@ -20,6 +20,13 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Handles task management business logic including:
+    - task creation and assignment
+    - ownership-based authorization
+    - task status updates
+    - email notifications
+ */
 @Service
 @RequiredArgsConstructor
 public class TaskService {
@@ -29,20 +36,19 @@ public class TaskService {
     private final EmailService emailService;
     private static final Logger logger = LoggerFactory.getLogger(TaskService.class);
 
-    //Post Task
     public TaskResponse addTask(TaskRequest request){
         UserEntity user = userService.getLoggedInUserEntity();
         logger.info("Adding new task with title: {}", request.getTitle());
-        Workspace workspace = workspaceRepository.findById(request.getWorkspace())
+        Workspace workspace = workspaceRepository.findById(request.getWorkspaceId())
                 .orElseThrow(()->{
-                    logger.warn("Workspace not found with id: {}", request.getWorkspace());
-                    return new ResourceNotFoundException("No Workspace found with this id: "+request.getWorkspace());
+                    logger.warn("Workspace not found with id: {}", request.getWorkspaceId());
+                    return new ResourceNotFoundException("No Workspace found with this id: "+request.getWorkspaceId());
                 });
-        TaskEntity entity = toEntity(request);
+        TaskEntity entity = mapToEntity(request);
         if(user.getId().equals(workspace.getCreatedBy().getId())) {
-            if(workspace.getAllocatedUsers().contains(userService.getUserEntity(request.getAssignedUser()))){
+            if(workspace.getAllocatedUsers().contains(userService.getUserEntity(request.getAssignedUserId()))){
                 entity = taskRepository.save(entity);
-                logger.info( "Task with id: {} is added successfully in workspace with id: {}",entity.getId(),request.getWorkspace());
+                logger.info( "Task with id: {} is added successfully in workspace with id: {}",entity.getId(),request.getWorkspaceId());
                 String subject = "New Task Assigned To You ";
                 String body = """
                     Hello %s,
@@ -73,18 +79,17 @@ public class TaskService {
                                     user.getName()
                             );
                 emailService.sendEmail(entity.getAssignedUser().getEmail(),subject,body);
-                return toResponse(entity);
+                return mapToResponse(entity);
             }else {
-                throw new RuntimeException("user with id: "+ request.getAssignedUser()+" is not the part of workspace with id: "+workspace.getId());
+                throw new RuntimeException("user with id: "+ request.getAssignedUserId()+" is not the part of workspace with id: "+workspace.getId());
             }
 
         }else {
-            logger.warn("Unauthorized Profile attempt to add task in workspace with id: {}", request.getWorkspace());
+            logger.warn("Unauthorized Profile attempt to add task in workspace with id: {}", request.getWorkspaceId());
             throw new UnauthorizedException("You are not allowed to add task in this Workspace: "+workspace.getName());
         }
     }
 
-    //Update Task
     public TaskResponse updateTask(Long id, TaskUpdateRequest request){
         logger.info("Attempting to update task with id: {}", id);
         UserResponse loggedInUser = userService.getLoggedInUser();
@@ -114,15 +119,15 @@ public class TaskService {
             if (request.getDueDate() != null) {
                 entity.setDueDate(request.getDueDate());
             }
-            if (request.getAssignedUser() != null) {
-                UserEntity assignedUser = userService.getUserEntity(request.getAssignedUser());
+            if (request.getAssignedUserId() != null) {
+                UserEntity assignedUser = userService.getUserEntity(request.getAssignedUserId());
                 entity.setAssignedUser(assignedUser);
             }
-            if (request.getWorkspace() != null) {
-                Workspace workspace = workspaceRepository.findById(request.getWorkspace()
+            if (request.getWorkspaceId() != null) {
+                Workspace workspace = workspaceRepository.findById(request.getWorkspaceId()
                 ).orElseThrow(() -> {
-                    logger.warn("Workspace not found with id: {}", request.getWorkspace());
-                    return new ResourceNotFoundException("Workspace not found for id: " + request.getWorkspace());
+                    logger.warn("Workspace not found with id: {}", request.getWorkspaceId());
+                    return new ResourceNotFoundException("Workspace not found for id: " + request.getWorkspaceId());
                 });
                 entity.setWorkspace(workspace);
             }
@@ -131,7 +136,7 @@ public class TaskService {
             if(request.getStatus() != null && !oldStatus.equals(request.getStatus())) {
                 sendTaskStatusUpdateNotification(entity,oldStatus,loggedInUser);
             }
-            return toResponse(entity);
+            return mapToResponse(entity);
         }else if (assignedUserId.equals(loggedInUserId)) {
             // assigned user can ONLY update status
             if (request.getStatus() != null) {
@@ -141,7 +146,7 @@ public class TaskService {
                 if(request.getStatus() != null && !oldStatus.equals(request.getStatus())) {
                     sendTaskStatusUpdateNotification(entity,oldStatus,loggedInUser);
                 }
-                return toResponse(entity);
+                return mapToResponse(entity);
             } else {
                 throw new UnauthorizedException("You can only update task status");
             }
@@ -151,12 +156,11 @@ public class TaskService {
         }
     }
 
-    //Methods for fetching Task
     public List<TaskResponse> fetchAllTask(int page, int size){
         Pageable pageable= PageRequest.of(page,size);
         Page<TaskEntity> taskPage = taskRepository.findAll(pageable);
         logger.info("Fetching all tasks");
-        return taskPage.stream().map(entity -> toResponse(entity)).collect(Collectors.toList());
+        return taskPage.stream().map(entity -> mapToResponse(entity)).collect(Collectors.toList());
     }
 
     public TaskResponse getTaskById(Long id){
@@ -165,7 +169,7 @@ public class TaskService {
                     logger.warn("Task not found for id: {}", id);
                     return new ResourceNotFoundException("No Task Found with id: "+id);
                 });
-        return toResponse(entity);
+        return mapToResponse(entity);
     }
 
     public List<TaskResponse> getTaskForUser(int page, int size){
@@ -173,7 +177,7 @@ public class TaskService {
         UserResponse response = userService.getLoggedInUser();
         Page<TaskEntity> page1 = taskRepository.findByAssignedUserId(response.getId(),pageable);
         logger.info("fetching all task of user with id: {}", response.getId());
-        return page1.stream().map(entity -> toResponse(entity)).collect(Collectors.toList());
+        return page1.stream().map(entity -> mapToResponse(entity)).collect(Collectors.toList());
     }
 
     public List<TaskResponse> getAllPostedTaskByUser(int page, int size){
@@ -181,10 +185,9 @@ public class TaskService {
         UserResponse response = userService.getLoggedInUser();
         Page<TaskEntity> list = taskRepository.findByCreatedById(response.getId(),pageable);
         logger.info("fetching all task posted by user with id: {}", response.getId());
-        return list.stream().map(entity -> toResponse(entity)).collect(Collectors.toList());
+        return list.stream().map(entity -> mapToResponse(entity)).collect(Collectors.toList());
     }
 
-    //Delete Task
     public String deleteTask(Long id){
         UserResponse response = userService.getLoggedInUser();
         logger.info("Attempting to delete task with id: {}", id);
@@ -203,13 +206,11 @@ public class TaskService {
             }
     }
 
-
-    //Helper methods
-    public TaskEntity toEntity(TaskRequest request){
+    public TaskEntity mapToEntity(TaskRequest request){
         UserEntity entity= userService.getLoggedInUserEntity();
-        UserEntity assignedUser = userService.getUserEntity(request.getAssignedUser());
-        Workspace workspace = workspaceRepository.findById(request.getWorkspace())
-                .orElseThrow(()->new ResourceNotFoundException("No Workspace with this id: "+request.getWorkspace()));
+        UserEntity assignedUser = userService.getUserEntity(request.getAssignedUserId());
+        Workspace workspace = workspaceRepository.findById(request.getWorkspaceId())
+                .orElseThrow(()->new ResourceNotFoundException("No Workspace with this id: "+request.getWorkspaceId()));
         return TaskEntity.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
@@ -221,11 +222,11 @@ public class TaskService {
                 .build();
     }
 
-    public TaskResponse toResponse(TaskEntity entity){
+    public TaskResponse mapToResponse(TaskEntity entity){
         UserEntity createdBy1= entity.getCreatedBy();
         UserEntity assignedUser1 = entity.getAssignedUser();
-        UserResponse createdBy2=  userService.toResponse(createdBy1);
-        UserResponse assignedUser2 = userService.toResponse(assignedUser1);
+        UserResponse createdBy2=  userService.mapToResponse(createdBy1);
+        UserResponse assignedUser2 = userService.mapToResponse(assignedUser1);
         WorkspaceResponse workspaceResponse= WorkspaceResponse.builder()
                 .name(entity.getWorkspace().getName())
                 .description(entity.getWorkspace().getDescription())

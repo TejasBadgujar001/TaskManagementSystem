@@ -21,6 +21,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Handles task management operations including
+ * task creation, assignment, tracking and updates.
+ * APIs are secured using JWT authentication and RBAC.
+ */
 @RestController
 @RequestMapping("/task")
 @RequiredArgsConstructor
@@ -31,7 +36,6 @@ import java.util.List;
 public class TaskController {
     private final TaskService service;
 
-    //API for posting task
     @Operation(
             summary = "Create new task",
             description = "Creates a new task inside a workspace and assigns it to a user.",
@@ -56,7 +60,6 @@ public class TaskController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    //API for fetching tasks
     @Operation(
             summary = "Get all tasks",
             description = "Fetches paginated list of all tasks. Accessible only to ADMIN users.",
@@ -77,7 +80,7 @@ public class TaskController {
         List<TaskResponse> responses = service.fetchAllTask(page, size);
         return new ResponseEntity<>(responses,HttpStatus.OK);
     }
-    //API for fetching all Task posted by user
+
     @Operation(
             summary = "Get tasks created by logged-in user",
             description = "Returns all tasks created by currently authenticated user.",
@@ -99,7 +102,6 @@ public class TaskController {
         return new ResponseEntity<>(responses,HttpStatus.OK);
     }
 
-    //This API is for to check how many task assigned to us
     @Operation(
             summary = "Get tasks assigned to logged-in user",
             description = "Returns all tasks assigned to currently authenticated user.",
@@ -121,7 +123,6 @@ public class TaskController {
         return new ResponseEntity<>(responses,HttpStatus.OK);
     }
 
-    //API For fetching task using id
     @Operation(
             summary = "Get task by id",
             description = "Fetches task details using task id.",
@@ -143,7 +144,6 @@ public class TaskController {
         return new ResponseEntity<>(response,HttpStatus.OK);
     }
 
-    //API for update task
     @Operation(
             summary = "Update task",
             description = "Allows task creator to update task details.",
@@ -163,12 +163,12 @@ public class TaskController {
     })
     @PatchMapping("/update/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    public ResponseEntity<TaskResponse> updateTask(@PathVariable Long id,@Valid @RequestBody TaskUpdateRequest request){
+    public ResponseEntity<TaskResponse> updateTask(@PathVariable Long id,
+                                                   @Valid @RequestBody TaskUpdateRequest request){
         TaskResponse response = service.updateTask(id,request);
         return new ResponseEntity<>(response,HttpStatus.OK);
     }
 
-    //API for delete task
     @Operation(
             summary = "Delete task",
             description = "Allows task creator to delete a task.",

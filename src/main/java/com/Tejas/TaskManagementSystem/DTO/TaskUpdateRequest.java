@@ -23,7 +23,7 @@ public class TaskUpdateRequest {
     private Priority priority;
     @Future(message = "Due date must be in the future")
     private LocalDate dueDate;
-    private Long assignedUser;
-    private Long workspace;
+    private Long assignedUserId;
+    private Long workspaceId;
     private Status status;
 }

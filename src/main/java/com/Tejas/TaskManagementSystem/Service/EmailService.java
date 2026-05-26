@@ -8,12 +8,11 @@ import org.springframework.mail.javamail.JavaMailSender;
 
 @Service
 @RequiredArgsConstructor
+//Service responsible for sending email notifications
 public class EmailService {
     private final JavaMailSender mailSender;
     @Value("${spring.mail.properties.mail.smtp.from}")
     private String fromMail;
-    @Value("${spring.mail.username}")
-    private String emailHost;
     public void sendEmail(String to,String subject, String body){
         try{
             SimpleMailMessage message = new SimpleMailMessage();

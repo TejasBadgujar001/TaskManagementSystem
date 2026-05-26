@@ -20,6 +20,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Handles comment-related operations for tasks.
+ * APIs are secured using JWT authentication and RBAC.
+ */
 @RestController
 @RequestMapping(path = "/comment")
 @RequiredArgsConstructor
@@ -30,7 +34,6 @@ import java.util.List;
 public class CommentController {
     private final CommentService service;
 
-    //API for posting comments
     @Operation(
             summary = "Add comment to task",
             description = "Allows MANAGER or MEMBER to add a comment on a task.",
@@ -61,7 +64,6 @@ public class CommentController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    //API for updating comment
     @Operation(
             summary = "Update comment",
             description = "Allows comment owner to edit their comment.",
@@ -92,7 +94,6 @@ public class CommentController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    //API for deleting comment
     @Operation(
             summary = "Delete comment",
             description = "Allows comment owner to delete their comment.",
@@ -118,7 +119,6 @@ public class CommentController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    //API for fetching all comments for task
     @Operation(
             summary = "Get all comments for task",
             description = "Fetches paginated list of all comments associated with a task.",
@@ -146,7 +146,7 @@ public class CommentController {
     ){
         return  new ResponseEntity<>(service.getAllCommentsForTask(id,page,size),HttpStatus.OK);
     }
-    //API for fetching all comments for user
+
     @Operation(
             summary = "Get all comments of user",
             description = "Fetches paginated list of comments created by a user.",
@@ -174,5 +174,4 @@ public class CommentController {
     ){
         return  new ResponseEntity<>(service.getAllCommentsForUser(id,page,size),HttpStatus.OK);
     }
-
 }

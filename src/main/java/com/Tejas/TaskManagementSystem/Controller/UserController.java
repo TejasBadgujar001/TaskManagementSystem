@@ -22,6 +22,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Handles user management and authentication operations.
+ * Secured using JWT authentication and role-based authorization.
+ */
 @RestController()
 @RequestMapping(path = "/user")
 @RequiredArgsConstructor
@@ -29,7 +33,6 @@ import java.util.Map;
 public class UserController {
     private final UserService service;
 
-    //API for SignUp
     @Operation(
             summary = "Register new user",
             description = "Creates a new user account in the system"
@@ -46,7 +49,6 @@ public class UserController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    //API for get Users
     @Operation(
             summary = "Fetch all users",
             description = "Returns paginated list of all users. Accessible only to ADMIN users.",
@@ -68,7 +70,6 @@ public class UserController {
         return new ResponseEntity<>(responseList,HttpStatus.OK);
     }
 
-    //API for fetching user by email
     @Operation(
             summary = "Get user by email",
             description = "Fetch user details using email address",
@@ -87,7 +88,6 @@ public class UserController {
         return new  ResponseEntity<>(response,HttpStatus.OK);
     }
 
-    //API for fetching user by name
     @Operation(
             summary = "Search users by name",
             description = "Returns list of users matching provided name",
@@ -106,7 +106,6 @@ public class UserController {
         return new  ResponseEntity<>(response,HttpStatus.OK);
     }
 
-    //API for fetching user by id
     @Operation(
             summary = "Get user by id",
             description = "Fetch user details using user id",
@@ -125,7 +124,6 @@ public class UserController {
         return new  ResponseEntity<>(response,HttpStatus.OK);
     }
 
-    //API for update user profile
     @Operation(
             summary = "Update user profile",
             description = "Allows logged-in user to partially update their profile information",
@@ -147,7 +145,6 @@ public class UserController {
         return new  ResponseEntity<>(response,HttpStatus.OK);
     }
 
-    //API for delete user
     @Operation(
             summary = "Delete user",
             description = "Deletes user account using user id. Accessible only to ADMIN users.",
@@ -169,7 +166,6 @@ public class UserController {
         return new ResponseEntity<>(message,HttpStatus.OK);
     }
 
-    //API for Login
     @Operation(
             summary = "Authenticate user",
             description = "Authenticates user credentials and generates JWT token"
