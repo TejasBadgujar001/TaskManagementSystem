@@ -333,7 +333,7 @@ http://localhost:8080/swagger-ui/index.html
 
 ## Login API & JWT Token
 
->![Login API](screenshots/Project architecture.png)
+>![Login API](screenshots/Login.png)
 
 ---
 
